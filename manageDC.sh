@@ -79,7 +79,7 @@ update_dc() {
     ${COMMAND} ps
 }
 
-ACTION_CMDS="stop start restart update list"
+ACTION_CMDS="stop start restart update list status logs"
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
 show_help() {
@@ -91,7 +91,9 @@ show_help() {
     echo "  start             Start docker container"
     echo "  restrat           Restart docker container"
     echo "  update            Update docker container."
-    echo "  list              List all docker container."
+    echo "  list              List all docker microservices."
+    echo "  status            Status of docker container."
+    echo "  logs              Logs of docker container."
     echo " "
     echo "Options:"
     echo " "
@@ -221,6 +223,10 @@ do
             IS_STATUS=1
             print_basename "Will show status of docker microservice."
             ;;
+        logs)
+            IS_LOG=1
+            print_basename "Will show logs of docker microservice."
+            ;;
         *)
             print_basename "Unrecognized action command: '$POS_ARG'"
             print_basename "See '${basename} --help' for supported options."
@@ -338,7 +344,7 @@ then
     exit 0
 fi
 
-# Show status of docker container
+# Show status of docker microservices
 if [[ ${IS_STATUS} ]]
 then
     print_basename "Status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being showed..."
@@ -359,6 +365,30 @@ then
         error_exit "'Error schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
     fi
     print_basename "Schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    exit 0
+fi
+
+# Show logs of docker container
+if [[ ${IS_LOG} ]]
+then
+    print_basename "Last 1000 log lines of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} are being showed..."
+    print_kopf
+
+    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+    echo "RUN: ${COMMAND} logs --tail=1000"
+    ${COMMAND} logs --tail=1000
+
+    if [[ $? -ne 0 ]]
+    then
+       RES1=1
+    fi
+
+    print_foot
+    if [[ ${RES1} == 1 ]]
+    then
+        error_exit "'Error schowing logs of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+    fi
+    print_basename "Schowing logs of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -459,4 +489,3 @@ then
       exit 0
    fi
 fi
-
