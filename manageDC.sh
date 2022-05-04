@@ -351,7 +351,7 @@ fi
 # Restart docker container
 if [[ ${IS_RESTART} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
-    top_dc
+    stop_dc
     print_foot
     start_dc
 
