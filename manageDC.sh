@@ -79,6 +79,75 @@ update_dc() {
     ${COMMAND} ps
 }
 
+# Reorder bash array for start, if shared db exists
+check_shared_db_start() {
+   DB_CONTAINER_NAME=mariadb
+   MYSQL_NETWORK=mysqlNet
+   IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
+   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+   if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
+      echo "INFO: Shared DB exist!"
+      for val in ${!ar[@]}
+      do
+         index=${val}
+         value=${ar[$val]}
+         #echo "index = ${val} , value = ${ar[$val]}"
+         if [ "${value}"  = "${DB_CONTAINER_NAME}" ]; then
+            index_ar=${index}
+            echo "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
+            echo "Total array length is: ${#ar[@]}"
+            echo "Unset value: ${DB_CONTAINER_NAME}"
+            unset ar[$index_ar] && echo "INFO: unset done!"
+            echo "Total array length is: ${#ar[@]}"
+            echo "Insert \"${DB_CONTAINER_NAME}\" on first place"
+            index_insert=0
+            value_ar=${DB_CONTAINER_NAME}
+            ar=("${ar[@]:0:$index_insert}" "$value_ar" "${ar[@]:$index_insert}") && echo "INFO: insert done!"
+            echo "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
+            echo "Total array length is: ${#ar[@]}"
+            break
+         fi
+      done
+   else
+      echo "INFO: Shared DB does not exist!"
+   fi
+}
+
+# Reorder bash array for stop, if shared db exists
+check_shared_db_stop() {
+   DB_CONTAINER_NAME=mariadb
+   MYSQL_NETWORK=mysqlNet
+   IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
+   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+   if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
+      echo "INFO: Shared DB exist!"
+      for val in ${!ar[@]}
+      do
+         index=${val}
+         value=${ar[$val]}
+         #echo "index = ${val} , value = ${ar[$val]}"
+         if [ "${value}"  = "${DB_CONTAINER_NAME}" ]; then
+            index_ar=${index}
+            echo "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
+            echo "Total array length is: ${#ar[@]}"
+            echo "Unset value: ${DB_CONTAINER_NAME}"
+            unset ar[$index_ar] && echo "INFO: unset done!"
+            echo "Total array length is: ${#ar[@]}"
+            echo "Insert \"${DB_CONTAINER_NAME}\" on last place."
+            #index_insert=0
+            value_ar=${DB_CONTAINER_NAME}
+            ar+=("$value_ar")
+            echo "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
+            echo "Total array length is: ${#ar[@]}"
+            break
+         fi
+      done
+   else
+      echo "INFO: Shared DB does not exist!"
+   fi
+}
+
+
 ACTION_CMDS="stop start restart update list status logs"
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
@@ -393,11 +462,15 @@ then
 fi
 
 # manage all docker container
+
 if  [[ ${ALL_DOCKER_CONTAINER} ]]
 then
    # start all docker container
    if [[ ${IS_START} ]]
    then
+      # Reorder bash array for start, if shared db exists
+      check_shared_db_start
+
       # loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          start_dc
@@ -421,6 +494,9 @@ then
    # stop all docker container
    if [[ ${IS_STOP} ]]
    then
+      # Reorder bash array for stop, if shared db exists
+      check_shared_db_stop
+
       # loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          stop_dc
@@ -444,10 +520,16 @@ then
    # restart all docker container
    if [[ ${IS_RESTART} ]]
    then
+      # Reorder bash array for stop, if shared db exists
+      check_shared_db_stop
+
       # loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          stop_dc
          print_foot
+
+         # Reorder bash array for start, if shared db exists
+         check_shared_db_start
          start_dc
 
          if [[ $? -ne 0 ]]
@@ -469,6 +551,9 @@ then
    # Update all docker container
    if [[ ${IS_UPDATE} ]]
    then
+      # Reorder bash array for stop, if shared db exists
+      check_shared_db_stop
+
       # loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          update_dc
@@ -489,3 +574,4 @@ then
       exit 0
    fi
 fi
+
