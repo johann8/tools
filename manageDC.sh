@@ -206,19 +206,20 @@ do
             print_basename "Will stop docker container."
             ;;
         restart)
-            #shift
             IS_RESTART=1
             print_basename "Will restart docker container."
             ;;
         update)
-            #shift
             IS_UPDATE=1
             print_basename "Will update docker container."
             ;;
         list)
-            #shift
             IS_LIST=1
             print_basename "Will list all docker microservices."
+            ;;
+        status)
+            IS_STATUS=1
+            print_basename "Will show status of docker microservice."
             ;;
         *)
             print_basename "Unrecognized action command: '$POS_ARG'"
@@ -316,7 +317,7 @@ fi
 if [[ ${IS_LIST} ]]
 then
     #print_basename "All docker container are being listed..."
-    print_basename "All docker container are being listed..."
+    print_basename "All docker microservices are being listed..."
     print_kopf
 
     for i in ${ar[*]}; do
@@ -334,6 +335,30 @@ then
         error_exit "'Error listing all docker microservices'"
     fi
     print_basename "Listing all docker microservices done!"
+    exit 0
+fi
+
+# Show status of docker container
+if [[ ${IS_STATUS} ]]
+then
+    print_basename "Status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being showed..."
+    print_kopf
+
+    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+    echo "RUN: ${COMMAND} ps"
+    ${COMMAND} ps
+
+    if [[ $? -ne 0 ]]
+    then
+       RES1=1
+    fi
+
+    print_foot
+    if [[ ${RES1} == 1 ]]
+    then
+        error_exit "'Error schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+    fi
+    print_basename "Schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
