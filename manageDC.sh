@@ -42,7 +42,7 @@ print_foot() {
     echo ""
 }
 
-# Function stop docker container
+# Function start docker container
 start_dc() {
     # start
     print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
@@ -462,7 +462,6 @@ then
 fi
 
 # manage all docker container
-
 if  [[ ${ALL_DOCKER_CONTAINER} ]]
 then
    # start all docker container
@@ -520,31 +519,76 @@ then
    # restart all docker container
    if [[ ${IS_RESTART} ]]
    then
+      # Print message
+      print_basename "===== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ====="
+
       # Reorder bash array for stop, if shared db exists
       check_shared_db_stop
 
-      # loop for all docker container
+      # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          stop_dc
          print_foot
 
-         # Reorder bash array for start, if shared db exists
-         check_shared_db_start
-         start_dc
-
          if [[ $? -ne 0 ]]
          then
             RES1=1
+         else
+            RES_STOP=1
          fi
 
          print_foot
          if [[ ${RES1} == 1 ]]
          then
-             error_exit "'Error restarting docker container'"
+             error_exit "'Error stoping docker container'"
+             exit 0
+         fi
+         print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+         echo " "
+      done
+
+      # Print message
+      if [[ ${RES_STOP} == 1 ]]
+      then
+         print_basename "Stopping ${cyanf}\"all\"${reset} docker container done!"
+         echo " "
+      fi
+
+      # Print message
+      print_basename "===== *** Retarting ${cyanf}\"all\"${reset} docker container!!! *** ====="
+
+      # Reorder bash array for stop, if shared db exists
+      check_shared_db_start
+
+      # stop loop for all docker container
+      for DOCKER_CONTAINER_NAME in ${ar[*]}; do
+         start_dc
+         print_foot
+
+         if [[ $? -ne 0 ]]
+         then
+            RES1=1
+         else
+            RES_START=1
+         fi
+
+         print_foot
+         if [[ ${RES1} == 1 ]]
+         then
+             error_exit "'Error starting docker container'"
+             exit 0
          fi
          print_basename "Restarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo ""
+         echo " "
       done
+
+      # Print message
+      if [[ ${RES_START} == 1 ]]
+      then
+         print_basename "Restarting- ${cyanf}\"all\"${reset} docker container done!"
+         echo " "
+      fi
+
       exit 0
    fi
 
