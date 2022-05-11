@@ -7,6 +7,9 @@ set -o errexit
 
 # set vars
 basename="${0##*/}"
+# Shared DB between containers
+DB_CONTAINER_NAME=mariadb
+DB_NETWORK=mysqlNet
 
 # define colors
 esc=""
@@ -25,7 +28,7 @@ error_exit() {
     exit 1
 }
 
-#
+# Print script name
 print_basename() {
    echo "${pinkf}${basename}:${reset} $1"
 }
@@ -40,6 +43,36 @@ print_kopf() {
 print_foot() {
     echo "${greenf}----------------------------${reset}"
     echo ""
+}
+
+# Print error message in red
+f_error() {
+ echo ${redf}$1${reset}
+}
+
+# For yes/no questions
+f_promtConfigYN() {
+ ans=
+ until [ "$ans" = "1" ]; do
+    case $# in
+    3)  echo -n "$1 [$2]: "; read _answer
+        if [[ ! "$_answer" = [y,n] ]]; then
+                         echo ""; f_error "***ERROR: Please enter \"y\" or \"n\"."; echo ""
+        else
+            cmd="$3=\"$_answer\""
+            eval $cmd; ans=1
+        fi
+    ;;
+    2)  echo -n "$1: "; read _answer
+        if [ -z "$_answer" ]; then
+            echo ""; f_error "***ERROR: the input must not be empty."; echo ""
+        else
+            cmd="$2=\"$_answer\""
+            eval $cmd; ans=1
+        fi
+    ;;
+    esac
+ done
 }
 
 # Function start docker container
@@ -57,15 +90,86 @@ start_dc() {
 
 # Function stop docker container
 stop_dc() {
-    # stop
-    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
-    print_kopf
-    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-    echo "RUN: ${COMMAND} down"
-    ${COMMAND} down
-    echo "" && sleep 5
-    echo "RUN: ${COMMAND} ps"
-    ${COMMAND} ps
+   #
+   if [[ ${DOCKER_CONTAINER_NAME} == ${DB_CONTAINER_NAME} ]]
+   then
+      echo "Check if database mariadb is shared"
+      IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
+      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
+
+      # Check if Shared DB exist
+      if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
+         echo "INFO: Shared DB exist!"
+         echo "Docker container with shared DB are: \"${ar_db[*]}\""
+         echo "Total array length is: ${#ar_db[@]}"
+         echo "Insert \"${DB_CONTAINER_NAME}\" on last place"
+         value_ar=${DB_CONTAINER_NAME}
+         ar_db+=("$value_ar")
+         echo "Total array length is: ${#ar_db[@]}"
+         echo "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
+         echo ""
+         echo "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         echo ""
+         f_promtConfigYN "Do you also want to stop these containers?" "y/n" "A_ANSWER"
+
+         # Stop all containers with shared MariaDB
+         if [ "${A_ANSWER}" = "y" ]
+         then
+            echo "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
+            # loop for all docker containers and stop them
+            for DOCKER_CONTAINER_NAME in ${ar_db[*]}; do
+               print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+               print_kopf
+               cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+               echo "RUN: ${COMMAND} down"
+               ${COMMAND} down
+               echo "" && sleep 5
+               echo "RUN: ${COMMAND} ps"
+               ${COMMAND} ps
+
+               if [[ $? -ne 0 ]]
+               then
+                  RES1=1
+               fi
+
+               print_foot
+               if [[ ${RES1} == 1 ]]
+               then
+                  error_exit "'Error stopping docker container'"
+               fi
+               print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+               echo ""
+            done
+            exit 0
+         else
+            echo "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
+            print_basename "Stopping of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
+            exit 0
+         fi
+      else
+         echo "INFO: Shared DB does not exist!"
+         # stop container
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         echo "RUN: ${COMMAND} down"
+         ${COMMAND} down
+         echo "" && sleep 5
+         echo "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
+      fi
+   else
+       # stop
+       print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+       print_kopf
+       cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+       echo "RUN: ${COMMAND} down"
+       ${COMMAND} down
+       echo "" && sleep 5
+       echo "RUN: ${COMMAND} ps"
+       ${COMMAND} ps
+   fi
 }
 
 # Function update docker container
@@ -306,7 +410,9 @@ done
 
 
 # get all docker microservices and save in an array
-ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}'))
+# The name must contain only letters and numbers
+#ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}'))
+ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
 
 RES1=""
 COMMAND=${DOCKER_COMPOSE_PATH}/docker-compose
