@@ -20,6 +20,7 @@ reset="${esc}[0m"
 # define functions
 #
 # ======= Functions =========
+# print error
 error_exit() {
     if [[ ! -z $1 ]]
     then
@@ -77,20 +78,103 @@ f_promtConfigYN() {
 
 # Function start docker container
 start_dc() {
-    # start
-    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
-    print_kopf
-    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-    echo "RUN: ${COMMAND} up -d"
-    ${COMMAND} up -d
-    echo "" && sleep 5
-    echo "RUN: ${COMMAND} ps"
-    ${COMMAND} ps
+   # Check if the name of docker container is equal the name of database container
+   if [[ ${DOCKER_CONTAINER_NAME} == ${DB_CONTAINER_NAME} ]]
+   then
+      echo "Check if database mariadb is shared"
+      IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
+      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
+
+      # Check if Shared DB exist
+      if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
+         echo "INFO: Shared DB exist!"
+         echo "Docker container with shared DB are: \"${ar_db[*]}\""
+         echo "Total array length is: ${#ar_db[@]}"
+         echo "Insert \"${DB_CONTAINER_NAME}\" on first place"
+         index_insert=0
+         value_ar=${DB_CONTAINER_NAME}
+         ar_db=("${ar_db[@]:0:$index_insert}" "$value_ar" "${ar_db[@]:$index_insert}") && echo "INFO: insert done!"
+         echo "Total array length is: ${#ar_db[@]}"
+         echo "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
+         echo ""
+         echo "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         echo ""
+         f_promtConfigYN "Do you also want to start these containers?" "y/n" "A_ANSWER"
+
+         # Start all containers with shared MariaDB
+         if [ "${A_ANSWER}" = "y" ]
+         then
+            echo "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
+            # loop for all docker containers and start them
+            for DOCKER_CONTAINER_NAME in ${ar_db[*]}; do
+               print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+               print_kopf
+               cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+               echo "RUN: ${COMMAND} up -d"
+               ${COMMAND} up -d
+               echo "" && sleep 5
+               echo "RUN: ${COMMAND} ps"
+               ${COMMAND} ps
+
+               if [[ $? -ne 0 ]]
+               then
+                  RES1=1
+               fi
+
+               print_foot
+               if [[ ${RES1} == 1 ]]
+               then
+                  error_exit "'Error starting docker container'"
+               fi
+               print_basename "Starting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+               echo ""
+            done
+            exit 0
+         else
+            echo "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
+            print_basename "Starting of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
+            exit 0
+         fi
+      else
+         echo "INFO: Shared DB does not exist!"
+         # start
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         echo "RUN: ${COMMAND} up -d"
+         ${COMMAND} up -d
+         echo "" && sleep 5
+         echo "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
+      fi
+   else
+      # start
+      print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+      print_kopf
+      cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+      echo "RUN: ${COMMAND} up -d"
+      ${COMMAND} up -d
+      echo "" && sleep 5
+      echo "RUN: ${COMMAND} ps"
+      ${COMMAND} ps
+   fi
 }
+#start_dc() {
+#    # start
+#    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+#    print_kopf
+#    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+#    echo "RUN: ${COMMAND} up -d"
+#    ${COMMAND} up -d
+#    echo "" && sleep 5
+#    echo "RUN: ${COMMAND} ps"
+#    ${COMMAND} ps
+#}
 
 # Function stop docker container
 stop_dc() {
-   #
+   # Check if the name of docker container is equal the name of database container
    if [[ ${DOCKER_CONTAINER_NAME} == ${DB_CONTAINER_NAME} ]]
    then
       echo "Check if database mariadb is shared"
