@@ -8,8 +8,9 @@ set -o errexit
 # set vars
 basename="${0##*/}"
 # Shared DB between containers
-DB_CONTAINER_NAME=mariadb
-DB_NETWORK=mysqlNet
+DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
+DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
+HYPHEN_ON=true                          # Docker microservice name may contain only: letters, numbers and hyphen. Otherwise: false
 
 # define colors
 esc=""
@@ -496,7 +497,14 @@ done
 # get all docker microservices and save in an array
 # The name must contain only letters and numbers
 #ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}'))
-ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
+if [[ "${HYPHEN_ON}" = true ]]
+then
+   # Docker microservice name may contain only: letters, numbers and hyphen
+   ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
+else
+   # Docker microservice name may contain only: only letters and numbers
+   ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
+fi
 
 RES1=""
 COMMAND=${DOCKER_COMPOSE_PATH}/docker-compose
