@@ -10,7 +10,7 @@ basename="${0##*/}"
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
 DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
-HYPHEN_ON=true                          # Docker microservice name may contain only: letters, numbers and hyphen. Otherwise: false
+HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 
 # define colors
 esc=""
