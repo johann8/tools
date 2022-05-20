@@ -11,6 +11,7 @@ basename="${0##*/}"
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
 DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
+SCRIPT_VERSION="0.1.1"                  # Set script version
 
 # define colors
 esc=""
@@ -38,18 +39,26 @@ print_basename() {
 # Function print kopf
 print_kopf() {
     echo ""
-    echo "${greenf}============================${reset}"
+    echo "${greenf}====================================${reset}"
 }
 
 # Function print foot
 print_foot() {
-    echo "${greenf}----------------------------${reset}"
-    echo ""
+   echo "${greenf}------------------------------------${reset}"
+   echo ""
 }
 
 # Print error message in red
 f_error() {
- echo ${redf}$1${reset}
+   echo ${redf}$1${reset}
+}
+
+# Show script version
+show_version() {
+   # Print script version
+   print_kopf
+   print_basename "Script version is: ${cyanf}\"${SCRIPT_VERSION}\"${reset}"
+   print_foot
 }
 
 # For yes/no questions
@@ -360,6 +369,7 @@ show_help() {
     echo "  -h, --help        Show help and exit."
     echo "  -n, --name        Set docker container name. Must not be used together with OPTION -a, --all"
     echo "  -s, --savepath    Path to save location of docker container; Default: /opt"
+    echo "  -v, --version     Show script version and exit."
     echo " "
     echo "Example1: ${basename} -c /usr/bin -s /opt/containerName -n CONTAINER_NAME start"
     echo "Example2: ${basename} -n CONTAINER_NAME stop"
@@ -407,6 +417,10 @@ do
             shift
             CONTAINER_SAVE_PATH=$1
             shift
+            ;;
+        -v|--version)
+            show_version
+            exit
             ;;
         -*|--*)
             print_basename "Unrecognized option: '$key'"
