@@ -7,11 +7,12 @@ set -o errexit
 
 # set vars
 basename="${0##*/}"
+SCRIPT_VERSION="0.1.2"                  # Set script version
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
 DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
-SCRIPT_VERSION="0.1.1"                  # Set script version
 
 # define colors
 esc=""
@@ -91,40 +92,40 @@ start_dc() {
    # Check if the name of docker container is equal the name of database container
    if [[ ${DOCKER_CONTAINER_NAME} == ${DB_CONTAINER_NAME} ]]
    then
-      echo "Check if database mariadb is shared"
+      print_basename "Check if database mariadb is shared"
       IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
-      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
       ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
 
       # Check if Shared DB exist
       if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
-         echo "INFO: Shared DB exist!"
-         echo "Docker container with shared DB are: \"${ar_db[*]}\""
-         echo "Total array length is: ${#ar_db[@]}"
-         echo "Insert \"${DB_CONTAINER_NAME}\" on first place"
+         print_basename "INFO: Shared DB exist!"
+         print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
+         print_basename "Total array length is: ${#ar_db[@]}"
+         print_basename "Insert \"${DB_CONTAINER_NAME}\" on first place"
          index_insert=0
          value_ar=${DB_CONTAINER_NAME}
          ar_db=("${ar_db[@]:0:$index_insert}" "$value_ar" "${ar_db[@]:$index_insert}") && echo "INFO: insert done!"
-         echo "Total array length is: ${#ar_db[@]}"
-         echo "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "Total array length is: ${#ar_db[@]}"
+         print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         echo "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          f_promtConfigYN "Do you also want to start these containers?" "y/n" "A_ANSWER"
 
          # Start all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]
          then
-            echo "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
+            print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and start them
             for DOCKER_CONTAINER_NAME in ${ar_db[*]}; do
                print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
                print_kopf
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-               echo "RUN: ${COMMAND} up -d"
+               print_basename "RUN: ${COMMAND} up -d"
                ${COMMAND} up -d
                echo "" && sleep 5
-               echo "RUN: ${COMMAND} ps"
+               print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
                if [[ $? -ne 0 ]]
@@ -142,20 +143,20 @@ start_dc() {
             done
             exit 0
          else
-            echo "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
+            print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
             print_basename "Starting of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
             exit 0
          fi
       else
-         echo "INFO: Shared DB does not exist!"
-         # start
+         print_basename "INFO: Shared DB does not exist!"
+         # start container
          print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
          print_kopf
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         echo "RUN: ${COMMAND} up -d"
+         print_basename "RUN: ${COMMAND} up -d"
          ${COMMAND} up -d
          echo "" && sleep 5
-         echo "RUN: ${COMMAND} ps"
+         print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
    else
@@ -163,10 +164,10 @@ start_dc() {
       print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
       print_kopf
       cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-      echo "RUN: ${COMMAND} up -d"
+      print_basename "RUN: ${COMMAND} up -d"
       ${COMMAND} up -d
       echo "" && sleep 5
-      echo "RUN: ${COMMAND} ps"
+      print_basename "RUN: ${COMMAND} ps"
       ${COMMAND} ps
    fi
 }
@@ -187,39 +188,39 @@ stop_dc() {
    # Check if the name of docker container is equal the name of database container
    if [[ ${DOCKER_CONTAINER_NAME} == ${DB_CONTAINER_NAME} ]]
    then
-      echo "Check if database mariadb is shared"
+      print_basename "Check if database mariadb is shared"
       IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
-      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
       ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
 
       # Check if Shared DB exist
       if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
-         echo "INFO: Shared DB exist!"
-         echo "Docker container with shared DB are: \"${ar_db[*]}\""
-         echo "Total array length is: ${#ar_db[@]}"
-         echo "Insert \"${DB_CONTAINER_NAME}\" on last place"
+         print_basename "INFO: Shared DB exist!"
+         print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
+         print_basename "Total array length is: ${#ar_db[@]}"
+         print_basename "Insert \"${DB_CONTAINER_NAME}\" on last place"
          value_ar=${DB_CONTAINER_NAME}
          ar_db+=("$value_ar")
-         echo "Total array length is: ${#ar_db[@]}"
-         echo "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "Total array length is: ${#ar_db[@]}"
+         print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         echo "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          f_promtConfigYN "Do you also want to stop these containers?" "y/n" "A_ANSWER"
 
          # Stop all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]
          then
-            echo "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
+            print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and stop them
             for DOCKER_CONTAINER_NAME in ${ar_db[*]}; do
                print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
                print_kopf
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-               echo "RUN: ${COMMAND} down"
+               print_basename "RUN: ${COMMAND} down"
                ${COMMAND} down
                echo "" && sleep 5
-               echo "RUN: ${COMMAND} ps"
+               print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
                if [[ $? -ne 0 ]]
@@ -237,20 +238,20 @@ stop_dc() {
             done
             exit 0
          else
-            echo "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
+            print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
             print_basename "Stopping of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
             exit 0
          fi
       else
-         echo "INFO: Shared DB does not exist!"
+         print_basename "INFO: Shared DB does not exist!"
          # stop container
          print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
          print_kopf
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         echo "RUN: ${COMMAND} down"
+         print_basename "RUN: ${COMMAND} down"
          ${COMMAND} down
          echo "" && sleep 5
-         echo "RUN: ${COMMAND} ps"
+         print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
    else
@@ -258,31 +259,90 @@ stop_dc() {
        print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
        print_kopf
        cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-       echo "RUN: ${COMMAND} down"
+       print_basename "RUN: ${COMMAND} down"
        ${COMMAND} down
        echo "" && sleep 5
-       echo "RUN: ${COMMAND} ps"
+       print_basename "RUN: ${COMMAND} ps"
        ${COMMAND} ps
    fi
 }
 
 # Function update docker container
+# Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
 update_dc() {
-    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being updated..."
-    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-    (${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh)
-    echo "" && sleep 5
-    print_kopf
-    echo "RUN: ${COMMAND} ps"
-    ${COMMAND} ps
+   # chech, if update.sx exists
+   if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh ]]
+   then
+      # read docker container image from update.sh
+      print_basename "Script \"${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh\" exists."
+      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
+      print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
+   else
+      # read docker container image from docker-compose.yml
+      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //' |grep "^${DOCKER_CONTAINER_NAME}")
+      print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
+   fi
+   
+   #
+   if [[ -z "${CONTAINER_NAME}" ]]
+   then
+      print_basename "ERROR: Dcocker container name does not exist!"
+      exit 0
+   fi
+
+   echo ${greenf}=================================================================${reset}
+   echo "  Start updating Docker Microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} am ${TIMESTAMP}"
+   echo ${greenf}=================================================================${reset}
+   #
+   # Get container id
+   CONTAINER_ID="$(docker ps -a --format "{{.ID}}" --filter name=^/"${CONTAINER_NAME}"$)"
+
+   # Get the image and hash of the running container
+   CONTAINER_IMAGE="$(docker inspect --format "{{.Config.Image}}" --type container ${CONTAINER_ID})"
+
+   RUNNING_IMAGE="$(docker inspect --format "{{.Image}}" --type container "${CONTAINER_ID}")"
+   echo " "
+   print_basename "${greenf}Running Image:${pinkf} ${RUNNING_IMAGE} ${reset}"
+   echo " "
+
+   # Pull in latest version of the container and get the hash
+   docker pull "${CONTAINER_IMAGE}"
+   LATEST_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${CONTAINER_IMAGE}")"
+   echo " "
+   print_basename "${greenf}Latest Image:${bluef} ${LATEST_IMAGE} ${reset}"
+
+   # Update / Exit
+   if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
+     echo " "
+     echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
+     echo "Update von Docker Image ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} wird gestartet..."
+     cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+     ${DOCKER_COMPOSE_PATH}/docker-compose down && ${DOCKER_COMPOSE_PATH}/docker-compose up -d
+     docker rmi $(docker images -f "dangling=true" -q --no-trunc)
+   else
+     echo " "
+     echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
+     print_basename "Es ist kein Update von Docker Image ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} vorhanden."
+     #exit 0
+   fi
 }
+
+#update_dc() {
+#    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being updated..."
+#    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+#    (${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh)
+#    echo "" && sleep 5
+#    print_kopf
+#    echo "RUN: ${COMMAND} ps"
+#    ${COMMAND} ps
+#}
 
 # Reorder bash array for start, if shared db exists
 check_shared_db_start() {
-   DB_CONTAINER_NAME=mariadb
-   MYSQL_NETWORK=mysqlNet
+   #DB_CONTAINER_NAME=mariadb
+   #DB_NETWORK=mysqlNet
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
-   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
       echo "INFO: Shared DB exist!"
       for val in ${!ar[@]}
@@ -313,10 +373,10 @@ check_shared_db_start() {
 
 # Reorder bash array for stop, if shared db exists
 check_shared_db_stop() {
-   DB_CONTAINER_NAME=mariadb
-   MYSQL_NETWORK=mysqlNet
+   #DB_CONTAINER_NAME=mariadb
+   #DB_NETWORK=mysqlNet
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
-   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${MYSQL_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
       echo "INFO: Shared DB exist!"
       for val in ${!ar[@]}
@@ -472,32 +532,32 @@ do
         start)
             #shift
             IS_START=1
-            print_basename "Will start docker container."
+            print_basename "Will start docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         stop)
             #shift
             IS_STOP=1
-            print_basename "Will stop docker container."
+            print_basename "Will stop docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         restart)
             IS_RESTART=1
-            print_basename "Will restart docker container."
+            print_basename "Will restart docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         update)
             IS_UPDATE=1
-            print_basename "Will update docker container."
+            print_basename "Will update docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         list)
             IS_LIST=1
-            print_basename "Will list all docker microservices."
+            print_basename "Will list all docker microservices: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         status)
             IS_STATUS=1
-            print_basename "Will show status of docker microservice."
+            print_basename "Will show status of docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         logs)
             IS_LOG=1
-            print_basename "Will show logs of docker microservice."
+            print_basename "Will show logs of docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
             ;;
         *)
             print_basename "Unrecognized action command: '$POS_ARG'"
@@ -535,7 +595,7 @@ then
     print_foot
     if [[ ${RES1} == 1 ]]
     then
-        error_exit "'Error starting docker container '"
+        error_exit "'Error starting docker microservice'"
     fi
     print_basename "Sarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
@@ -554,7 +614,7 @@ then
     print_foot
     if [[ ${RES1} == 1 ]]
     then
-        error_exit "'Error stopping docker container'"
+        error_exit "'Error stopping docker microservice'"
     fi
     print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
@@ -575,9 +635,9 @@ then
     print_foot
     if [[ ${RES1} == 1 ]]
     then
-        error_exit "'Error restarting docker container'"
+        error_exit "'Error restarting docker microservice'"
     fi
-    print_basename "Restarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -591,12 +651,13 @@ then
        RES1=1
     fi
 
-    print_foot
+    #print_foot
+    echo ""
     if [[ ${RES1} == 1 ]]
     then
-        error_exit "'Error updating docker container'"
+        error_exit "'Error updating docker microservice'"
     fi
-    print_basename "Updating docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    print_basename "Updating docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -645,7 +706,7 @@ then
     then
         error_exit "'Error schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
     fi
-    print_basename "Schowing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    print_basename "Showing status of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -669,7 +730,7 @@ then
     then
         error_exit "'Error schowing logs of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
     fi
-    print_basename "Schowing logs of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    print_basename "Showing logs of docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
     exit 0
 fi
 
