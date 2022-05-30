@@ -7,7 +7,7 @@ set -o errexit
 
 # set vars
 basename="${0##*/}"
-SCRIPT_VERSION="0.1.3"                  # Set script version
+SCRIPT_VERSION="0.1.4"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -102,10 +102,11 @@ start_dc() {
          print_basename "INFO: Shared DB exist!"
          print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
          print_basename "Total array length is: ${#ar_db[@]}"
-         print_basename "Insert \"${DB_CONTAINER_NAME}\" on first place"
+         print_basename "Inserting value \"${DB_CONTAINER_NAME}\" on first place in array..."
          index_insert=0
          value_ar=${DB_CONTAINER_NAME}
-         ar_db=("${ar_db[@]:0:$index_insert}" "$value_ar" "${ar_db[@]:$index_insert}") && echo "INFO: insert done!"
+         ar_db=("${ar_db[@]:0:$index_insert}" "$value_ar" "${ar_db[@]:$index_insert}")
+         print_basename "INFO: insert done!"
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
@@ -137,11 +138,12 @@ start_dc() {
                if [[ ${RES1} == 1 ]]
                then
                   error_exit "'Error starting docker container'"
+                  exit 0
                fi
                print_basename "Starting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
                echo ""
             done
-            exit 0
+            #exit 0
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
             print_basename "Starting of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
@@ -198,7 +200,7 @@ stop_dc() {
          print_basename "INFO: Shared DB exist!"
          print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
          print_basename "Total array length is: ${#ar_db[@]}"
-         print_basename "Insert \"${DB_CONTAINER_NAME}\" on last place"
+         print_basename "Inserting value \"${DB_CONTAINER_NAME}\" on last place in array..."
          value_ar=${DB_CONTAINER_NAME}
          ar_db+=("$value_ar")
          print_basename "Total array length is: ${#ar_db[@]}"
@@ -232,11 +234,11 @@ stop_dc() {
                if [[ ${RES1} == 1 ]]
                then
                   error_exit "'Error stopping docker container'"
+                  exit 0
                fi
                print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
                echo ""
             done
-            exit 0
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
             print_basename "Stopping of docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is canceled!"
