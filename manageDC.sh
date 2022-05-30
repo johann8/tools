@@ -49,6 +49,12 @@ print_foot() {
    echo ""
 }
 
+# Function print end
+ print_end() {
+   echo "${greenf}********************************************************************${reset}"
+   echo ""
+}
+
 # Print error message in red
 f_error() {
    echo ${redf}$1${reset}
@@ -95,7 +101,9 @@ start_dc() {
       print_basename "Check if database mariadb is shared"
       IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
       SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      ar_db=
       ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
+      
 
       # Check if Shared DB exist
       if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
@@ -106,11 +114,13 @@ start_dc() {
          index_insert=0
          value_ar=${DB_CONTAINER_NAME}
          ar_db=("${ar_db[@]:0:$index_insert}" "$value_ar" "${ar_db[@]:$index_insert}")
+         # Declare var ar_db as global
+         declare -p ar_db > /dev/null 2>&1
          print_basename "INFO: insert done!"
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         print_basename "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          f_promtConfigYN "Do you also want to start these containers?" "y/n" "A_ANSWER"
 
@@ -141,7 +151,7 @@ start_dc() {
                   exit 0
                fi
                print_basename "Starting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-               echo ""
+               #echo ""
             done
             #exit 0
          else
@@ -157,7 +167,8 @@ start_dc() {
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
          print_basename "RUN: ${COMMAND} up -d"
          ${COMMAND} up -d
-         echo "" && sleep 5
+         #echo "" 
+         sleep 5
          print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
@@ -168,7 +179,8 @@ start_dc() {
       cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
       print_basename "RUN: ${COMMAND} up -d"
       ${COMMAND} up -d
-      echo "" && sleep 5
+      #echo "" 
+      sleep 5
       print_basename "RUN: ${COMMAND} ps"
       ${COMMAND} ps
    fi
@@ -193,6 +205,7 @@ stop_dc() {
       print_basename "Check if database mariadb is shared"
       IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
       SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+      ar_db=
       ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
 
       # Check if Shared DB exist
@@ -203,10 +216,12 @@ stop_dc() {
          print_basename "Inserting value \"${DB_CONTAINER_NAME}\" on last place in array..."
          value_ar=${DB_CONTAINER_NAME}
          ar_db+=("$value_ar")
+         # Declare var ar_db as global
+         declare -p ar_db  > /dev/null 2>&1
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         print_basename "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well:  ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          f_promtConfigYN "Do you also want to stop these containers?" "y/n" "A_ANSWER"
 
@@ -237,7 +252,7 @@ stop_dc() {
                   exit 0
                fi
                print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-               echo ""
+               #echo ""
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
@@ -252,7 +267,8 @@ stop_dc() {
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
          print_basename "RUN: ${COMMAND} down"
          ${COMMAND} down
-         echo "" && sleep 5
+         #echo "" 
+         sleep 5
          print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
@@ -263,7 +279,8 @@ stop_dc() {
        cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
        print_basename "RUN: ${COMMAND} down"
        ${COMMAND} down
-       echo "" && sleep 5
+       #echo "" 
+       sleep 5
        print_basename "RUN: ${COMMAND} ps"
        ${COMMAND} ps
    fi
@@ -594,7 +611,7 @@ then
        RES1=1
     fi
 
-    print_foot
+    print_end
     if [[ ${RES1} == 1 ]]
     then
         error_exit "'Error starting docker microservice'"
@@ -613,7 +630,7 @@ then
        RES1=1
     fi
 
-    print_foot
+    print_end
     if [[ ${RES1} == 1 ]]
     then
         error_exit "'Error stopping docker microservice'"
@@ -634,12 +651,13 @@ then
        RES1=1
     fi
 
-    print_foot
+    # print_foot
     if [[ ${RES1} == 1 ]]
     then
-        error_exit "'Error restarting docker microservice'"
+        error_exit "'Error restarting docker microservices!"
     fi
-    print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+    print_end
+    print_basename "Restarting docker microservices ${cyanf}\"${ar_db[*]}\"${reset} done!"
     exit 0
 fi
 
@@ -653,8 +671,8 @@ then
        RES1=1
     fi
 
-    #print_foot
-    echo ""
+    print_end
+    #echo ""
     if [[ ${RES1} == 1 ]]
     then
         error_exit "'Error updating docker microservice'"
