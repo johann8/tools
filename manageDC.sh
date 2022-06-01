@@ -304,6 +304,30 @@ stop_dc() {
    fi
 }
 
+start_dc_all() {
+   # start container for Option: -a
+   print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+   print_kopf
+   cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+   print_basename "RUN: ${COMMAND} up -d"
+   ${COMMAND} up -d
+   print_basename "RUN: ${COMMAND} ps"
+   ${COMMAND} ps
+   print_foot
+}
+
+stop_dc_all() {
+   # stop container for Option: -a
+   print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+   print_kopf
+   cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+   print_basename "RUN: ${COMMAND} down"
+   ${COMMAND} down
+   print_basename "RUN: ${COMMAND} ps"
+   ${COMMAND} ps
+   print_foot
+}
+
 # Function update docker container
 # Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
 update_dc() {
@@ -811,17 +835,8 @@ then
 
       # loop to start all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         # start container
-         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
-         print_kopf
-         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         print_basename "RUN: ${COMMAND} up -d"
-         ${COMMAND} up -d
-         #echo ""
-         #sleep 5
-         print_basename "RUN: ${COMMAND} ps"
-         ${COMMAND} ps
-         print_foot
+         # start container for Option: -a
+         start_dc_all
 
          if [[ $? -ne 0 ]]
          then
@@ -852,17 +867,8 @@ then
 
       # loop to stop all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do         
-         # stop container
-         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
-         print_kopf
-         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         print_basename "RUN: ${COMMAND} down"
-         ${COMMAND} down
-         #echo ""
-         #sleep 5
-         print_basename "RUN: ${COMMAND} ps"
-         ${COMMAND} ps
-         print_foot
+         # stop container for Option: -a
+         stop_dc_all
 
          if [[ $? -ne 0 ]]
          then
@@ -894,17 +900,8 @@ then
 
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         # stop container
-         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
-         print_kopf
-         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         print_basename "RUN: ${COMMAND} down"
-         ${COMMAND} down
-         #echo ""
-         #sleep 5
-         print_basename "RUN: ${COMMAND} ps"
-         ${COMMAND} ps
-         print_foot
+         # stop container for Option: -a
+         stop_dc_all
 
          if [[ $? -ne 0 ]]
          then
@@ -939,18 +936,8 @@ then
 
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         #start_dc
-         # start container
-         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
-         print_kopf
-         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-         print_basename "RUN: ${COMMAND} up -d"
-         ${COMMAND} up -d
-         #echo ""
-         #sleep 5
-         print_basename "RUN: ${COMMAND} ps"
-         ${COMMAND} ps
-         print_foot
+         # start container for Option: -a
+         start_dc_all
 
          if [[ $? -ne 0 ]]
          then
