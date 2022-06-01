@@ -5,16 +5,23 @@
 #
 set -o errexit
 
-# set vars
+#
+### Set variables
+#
 basename="${0##*/}"
-SCRIPT_VERSION="0.1.5"                  # Set script version
+SCRIPT_VERSION="0.1.6"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
 DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 
-# define colors
+##############################################################################
+# >>> Normaly there is no need to change anything below this comment line. ! #
+##############################################################################
+#
+### define colors
+#
 esc=""
 bluef="${esc}[34m"; redf="${esc}[31m"; yellowf="${esc}[33m"; greenf="${esc}[32m"; cyanf="${esc}[36m"; pinkf="${esc}[35m"; xxxf="${esc}[1;32m"
 boldon="${esc}[1m"; boldoff="${esc}[22m"
@@ -39,19 +46,19 @@ print_basename() {
 
 # Function print kopf
 print_kopf() {
-    echo ""
-    echo "${greenf}====================================${reset}"
+    #echo ""
+    echo "${greenf}=====================================================${reset}"
 }
 
 # Function print foot
 print_foot() {
-   echo "${greenf}------------------------------------${reset}"
+   echo "${greenf}-----------------------------------------------------${reset}"
    echo ""
 }
 
 # Function print end
  print_end() {
-   echo "${greenf}********************************************************************${reset}"
+   echo "${greenf}************************************************************${reset}"
    echo ""
 }
 
@@ -108,7 +115,7 @@ start_dc() {
       # Check if Shared DB exist
       if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
          print_basename "INFO: Shared DB exist!"
-         print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
+         print_basename "Docker microservices with shared DB are: ${cyanf}\"${ar_db[*]}\"${reset}"
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Inserting value \"${DB_CONTAINER_NAME}\" on first place in array..."
          index_insert=0
@@ -121,8 +128,17 @@ start_dc() {
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          print_basename "To start container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be started as well: ${cyanf}\"${ar_db[*]}\"${reset}"
-         echo ""
-         f_promtConfigYN "Do you also want to start these containers?" "y/n" "A_ANSWER"
+
+         #if [ x${ALL_DOCKER_CONTAINER} = x1 ]
+         #then
+         #   continue
+         #else 
+         #   echo ""
+         #   f_promtConfigYN "Do you also want to start thes microservices?" "y/n" "A_ANSWER"
+         #fi
+
+         echo ""    
+         f_promtConfigYN "Do you also want to start thes microservices?" "y/n" "A_ANSWER"
 
          # Start all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]
@@ -135,7 +151,8 @@ start_dc() {
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
                print_basename "RUN: ${COMMAND} up -d"
                ${COMMAND} up -d
-               echo "" && sleep 5
+               #echo ""
+               sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
@@ -211,7 +228,7 @@ stop_dc() {
       # Check if Shared DB exist
       if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
          print_basename "INFO: Shared DB exist!"
-         print_basename "Docker container with shared DB are: \"${ar_db[*]}\""
+         print_basename "Docker microservices with shared DB are: ${cyanf}\"${ar_db[*]}\"${reset}"
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Inserting value \"${DB_CONTAINER_NAME}\" on last place in array..."
          value_ar=${DB_CONTAINER_NAME}
@@ -222,7 +239,7 @@ stop_dc() {
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
          print_basename "To stop container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}, other containers must be stopped as well: ${cyanf}\"${ar_db[*]}\"${reset}"
-         echo ""
+         #echo ""
          f_promtConfigYN "Do you also want to stop these containers?" "y/n" "A_ANSWER"
 
          # Stop all containers with shared MariaDB
@@ -236,7 +253,8 @@ stop_dc() {
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
                print_basename "RUN: ${COMMAND} down"
                ${COMMAND} down
-               echo "" && sleep 5
+               #echo "" 
+               sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
@@ -273,7 +291,7 @@ stop_dc() {
          ${COMMAND} ps
       fi
    else
-       # stop
+       # stop container
        print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
        print_kopf
        cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
@@ -289,7 +307,7 @@ stop_dc() {
 # Function update docker container
 # Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
 update_dc() {
-   # chech, if update.sx exists
+   # check, if update.sh exists
    if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh ]]
    then
       # read docker container image from update.sh
@@ -358,12 +376,10 @@ update_dc() {
 
 # Reorder bash array for start, if shared db exists
 check_shared_db_start() {
-   #DB_CONTAINER_NAME=mariadb
-   #DB_NETWORK=mysqlNet
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
-      echo "INFO: Shared DB exist!"
+      print_basename "INFO: Shared DB exist!"
       for val in ${!ar[@]}
       do
          index=${val}
@@ -371,22 +387,25 @@ check_shared_db_start() {
          #echo "index = ${val} , value = ${ar[$val]}"
          if [ "${value}"  = "${DB_CONTAINER_NAME}" ]; then
             index_ar=${index}
-            echo "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
-            echo "Total array length is: ${#ar[@]}"
-            echo "Unset value: ${DB_CONTAINER_NAME}"
-            unset ar[$index_ar] && echo "INFO: unset done!"
-            echo "Total array length is: ${#ar[@]}"
-            echo "Insert \"${DB_CONTAINER_NAME}\" on first place"
+            print_basename "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
+            print_basename "Total array length is: ${#ar[@]}"
+            print_basename "Unset value: ${DB_CONTAINER_NAME}"
+            unset ar[$index_ar] 
+            print_basename "INFO: unset done!"
+            print_basename "Total array length is: ${#ar[@]}"
+            print_basename "Insert \"${DB_CONTAINER_NAME}\" on first place"
             index_insert=0
             value_ar=${DB_CONTAINER_NAME}
-            ar=("${ar[@]:0:$index_insert}" "$value_ar" "${ar[@]:$index_insert}") && echo "INFO: insert done!"
-            echo "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
-            echo "Total array length is: ${#ar[@]}"
+            ar=("${ar[@]:0:$index_insert}" "$value_ar" "${ar[@]:$index_insert}")
+            print_basename "INFO: insert done!"
+            print_basename "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
+            print_basename "Total array length is: ${#ar[@]}"
+            echo -e "\n"    
             break
          fi
       done
    else
-      echo "INFO: Shared DB does not exist!"
+      print_basename "INFO: Shared DB does not exist!"
    fi
 }
 
@@ -397,7 +416,7 @@ check_shared_db_stop() {
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
-      echo "INFO: Shared DB exist!"
+      print_basename "INFO: Shared DB exist!"
       for val in ${!ar[@]}
       do
          index=${val}
@@ -405,22 +424,24 @@ check_shared_db_stop() {
          #echo "index = ${val} , value = ${ar[$val]}"
          if [ "${value}"  = "${DB_CONTAINER_NAME}" ]; then
             index_ar=${index}
-            echo "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
-            echo "Total array length is: ${#ar[@]}"
-            echo "Unset value: ${DB_CONTAINER_NAME}"
-            unset ar[$index_ar] && echo "INFO: unset done!"
-            echo "Total array length is: ${#ar[@]}"
-            echo "Insert \"${DB_CONTAINER_NAME}\" on last place."
+            print_basename "Array index of \"${DB_CONTAINER_NAME}\" is: ${index_ar}"
+            print_basename "Total array length is: ${#ar[@]}"
+            print_basename "Unset value: ${DB_CONTAINER_NAME}"
+            unset ar[$index_ar]
+            print_basename "INFO: unset done!"
+            print_basename "Total array length is: ${#ar[@]}"
+            print_basename "Insert \"${DB_CONTAINER_NAME}\" on last place."
             #index_insert=0
             value_ar=${DB_CONTAINER_NAME}
             ar+=("$value_ar")
-            echo "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
-            echo "Total array length is: ${#ar[@]}"
+            print_basename "Found the following microservices: ${cyanf}\"${ar[*]}\"${reset}"
+            print_basename "Total array length is: ${#ar[@]}"
+            echo -e "\n"
             break
          fi
       done
    else
-      echo "INFO: Shared DB does not exist!"
+      print_basename "INFO: Shared DB does not exist!"
    fi
 }
 
@@ -551,20 +572,40 @@ do
         start)
             #shift
             IS_START=1
-            print_basename "Will start docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            if [[ ${ALL_DOCKER_CONTAINER} ]]
+            then 
+               print_basename "Will start all docker microservices."
+            else
+               print_basename "Will start docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            fi
             ;;
         stop)
             #shift
             IS_STOP=1
-            print_basename "Will stop docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            if [[ ${ALL_DOCKER_CONTAINER} ]]
+            then
+               print_basename "Will stop all docker microservices."
+            else
+               print_basename "Will stop docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            fi
             ;;
         restart)
             IS_RESTART=1
-            print_basename "Will restart docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            if [[ ${ALL_DOCKER_CONTAINER} ]]
+            then
+               print_basename "Will restart all docker microservices."
+            else
+               print_basename "Will restart docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            fi
             ;;
         update)
             IS_UPDATE=1
-            print_basename "Will update docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            if [[ ${ALL_DOCKER_CONTAINER} ]]
+            then
+               print_basename "Will update all docker microservices."
+            else
+               print_basename "Will update docker microservice: ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset}"
+            fi
             ;;
         list)
             IS_LIST=1
@@ -760,25 +801,40 @@ then
    # start all docker container
    if [[ ${IS_START} ]]
    then
+      # Print message
+      echo -e "\n"
+      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      echo ""
+    
       # Reorder bash array for start, if shared db exists
       check_shared_db_start
 
-      # loop for all docker container
+      # loop to start all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         start_dc
+         # start container
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         print_basename "RUN: ${COMMAND} up -d"
+         ${COMMAND} up -d
+         #echo ""
+         #sleep 5
+         print_basename "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
+         print_foot
 
          if [[ $? -ne 0 ]]
          then
             RES1=1
          fi
 
-         print_foot
          if [[ ${RES1} == 1 ]]
          then
             error_exit "'Error starting docker container '"
          fi
          print_basename "Sarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo ""
+         print_end
+         echo -e "\n"
       done
       exit 0
    fi
@@ -786,25 +842,41 @@ then
    # stop all docker container
    if [[ ${IS_STOP} ]]
    then
+      # Print message
+      echo -e "\n"
+      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      echo -e "\n"
+      
       # Reorder bash array for stop, if shared db exists
       check_shared_db_stop
 
-      # loop for all docker container
-      for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         stop_dc
+      # loop to stop all docker container
+      for DOCKER_CONTAINER_NAME in ${ar[*]}; do         
+         # stop container
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         print_basename "RUN: ${COMMAND} down"
+         ${COMMAND} down
+         #echo ""
+         #sleep 5
+         print_basename "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
+         print_foot
 
          if [[ $? -ne 0 ]]
          then
             RES1=1
          fi
 
-         print_foot
+         #print_foot
          if [[ ${RES1} == 1 ]]
          then
             error_exit "'Error stopping docker container'"
          fi
          print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo ""
+         print_end
+         echo -e "\n"  
       done
       exit 0
    fi
@@ -813,14 +885,25 @@ then
    if [[ ${IS_RESTART} ]]
    then
       # Print message
-      print_basename "===== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ====="
+      echo -e "\n"
+      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      echo -e "\n"
 
       # Reorder bash array for stop, if shared db exists
       check_shared_db_stop
 
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         stop_dc
+         # stop container
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being stoped..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         print_basename "RUN: ${COMMAND} down"
+         ${COMMAND} down
+         #echo ""
+         #sleep 5
+         print_basename "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
          print_foot
 
          if [[ $? -ne 0 ]]
@@ -830,33 +913,85 @@ then
             RES_STOP=1
          fi
 
-         print_foot
          if [[ ${RES1} == 1 ]]
          then
              error_exit "'Error stoping docker container'"
              exit 0
          fi
          print_basename "Stopping docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo " "
+         print_end
+         echo -e "\n"
       done
 
       # Print message
       if [[ ${RES_STOP} == 1 ]]
-      then
-         print_basename "Stopping ${cyanf}\"all\"${reset} docker container done!"
-         echo " "
+      then        
+         print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_end
       fi
 
       # Print message
-      print_basename "===== *** Retarting ${cyanf}\"all\"${reset} docker container!!! *** ====="
-
+      echo -e "\n\n"
+      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      echo ""
       # Reorder bash array for stop, if shared db exists
       check_shared_db_start
 
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         start_dc
+         #start_dc
+         # start container
+         print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being started..."
+         print_kopf
+         cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
+         print_basename "RUN: ${COMMAND} up -d"
+         ${COMMAND} up -d
+         #echo ""
+         #sleep 5
+         print_basename "RUN: ${COMMAND} ps"
+         ${COMMAND} ps
          print_foot
+
+         if [[ $? -ne 0 ]]
+         then
+            RES1=1
+         else
+            RES_START=1
+         fi
+
+         if [[ ${RES1} == 1 ]]
+         then
+             error_exit "'Error starting docker container'"
+             exit 0
+         fi
+         print_basename "Restarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+         print_end
+         echo -e "\n"
+      done
+
+      # Print message
+      if [[ ${RES_START} == 1 ]]
+      then
+         print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_end
+      fi
+
+      exit 0
+   fi
+
+   # Update all docker container
+   if [[ ${IS_UPDATE} ]]
+   then
+      echo -e "\n"
+      print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      echo -e "\n"
+
+      # Reorder bash array for stop, if shared db exists
+      check_shared_db_stop
+
+      # loop for all docker container
+      for DOCKER_CONTAINER_NAME in ${ar[*]}; do
+         update_dc
 
          if [[ $? -ne 0 ]]
          then
@@ -868,46 +1003,20 @@ then
          print_foot
          if [[ ${RES1} == 1 ]]
          then
-             error_exit "'Error starting docker container'"
-             exit 0
+             error_exit "'Error updating docker container'"
          fi
-         print_basename "Restarting docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo " "
+         print_basename "Updating docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
+         print_end
+         echo -e "\n"
       done
 
       # Print message
       if [[ ${RES_START} == 1 ]]
       then
-         print_basename "Restarting- ${cyanf}\"all\"${reset} docker container done!"
-         echo " "
+         print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_end
       fi
 
-      exit 0
-   fi
-
-   # Update all docker container
-   if [[ ${IS_UPDATE} ]]
-   then
-      # Reorder bash array for stop, if shared db exists
-      check_shared_db_stop
-
-      # loop for all docker container
-      for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         update_dc
-
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         fi
-
-         print_foot
-         if [[ ${RES1} == 1 ]]
-         then
-             error_exit "'Error updating docker container'"
-         fi
-         print_basename "Updating docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} done!"
-         echo ""
-      done
       exit 0
    fi
 fi
