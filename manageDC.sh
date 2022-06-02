@@ -384,13 +384,11 @@ update_dc() {
      echo " "
      echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
      print_basename "Es ist kein Update von Docker Image ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} vorhanden."
-     #exit 0
    fi
 }
 
 # check if container is running
 dc_status() {
-   #DC_NAME=${DOCKER_CONTAINER_NAME}
    _DC_STATUS=$( docker ps -a -f name=${DOCKER_CONTAINER_NAME} | grep ${DOCKER_CONTAINER_NAME} 2> /dev/null )
    if [[ ! -z ${_DC_STATUS} ]]; then
       print_basename "Container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} has status: $( echo ${_DC_STATUS} | awk '{ print $7 }' )"
