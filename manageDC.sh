@@ -388,15 +388,17 @@ update_dc() {
    fi
 }
 
-#update_dc() {
-#    print_basename "Docker container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} is being updated..."
-#    cd ${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}
-#    (${CONTAINER_SAVE_PATH}/${DOCKER_CONTAINER_NAME}/update.sh)
-#    echo "" && sleep 5
-#    print_kopf
-#    echo "RUN: ${COMMAND} ps"
-#    ${COMMAND} ps
-#}
+# check if container is running
+dc_status() {
+   #DC_NAME=${DOCKER_CONTAINER_NAME}
+   _DC_STATUS=$( docker ps -a -f name=${DOCKER_CONTAINER_NAME} | grep ${DOCKER_CONTAINER_NAME} 2> /dev/null )
+   if [[ ! -z ${_DC_STATUS} ]]; then
+      print_basename "Container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} has status: $( echo ${_DC_STATUS} | awk '{ print $7 }' )"
+   else
+      print_basename "Container ${cyanf}\"${DOCKER_CONTAINER_NAME}\"${reset} has status: Down"
+      break
+   fi
+}
 
 # Reorder bash array for start, if shared db exists
 check_shared_db_start() {
@@ -836,6 +838,7 @@ then
       # loop to start all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          # start container for Option: -a
+         #dc_status
          start_dc_all
 
          if [[ $? -ne 0 ]]
@@ -868,6 +871,7 @@ then
       # loop to stop all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do         
          # stop container for Option: -a
+         #dc_status        
          stop_dc_all
 
          if [[ $? -ne 0 ]]
@@ -900,8 +904,9 @@ then
 
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
-         # stop container for Option: -a
-         stop_dc_all
+        # stop container for Option: -a
+        #dc_status 
+        stop_dc_all
 
          if [[ $? -ne 0 ]]
          then
@@ -937,6 +942,7 @@ then
       # stop loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
          # start container for Option: -a
+         #dc_status
          start_dc_all
 
          if [[ $? -ne 0 ]]
@@ -978,6 +984,8 @@ then
 
       # loop for all docker container
       for DOCKER_CONTAINER_NAME in ${ar[*]}; do
+         # update container for Option: -a
+         #dc_status
          update_dc
 
          if [[ $? -ne 0 ]]
