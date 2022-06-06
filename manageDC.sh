@@ -9,7 +9,7 @@ set -o errexit
 ### Set variables
 #
 basename="${0##*/}"
-SCRIPT_VERSION="0.1.8"                  # Set script version
+SCRIPT_VERSION="0.1.9"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -667,85 +667,107 @@ done
 #ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}'))
 if [[ "${HYPHEN_ON}" = true ]]
 then
-   # Docker microservice name may contain only: letters, numbers and hyphen
-   ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
-   print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+    # Docker microservice name may contain only: letters, numbers and hyphen
+    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
+    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 else
-   # Docker microservice name may contain only: only letters and numbers
-   ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
-   print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+    # Docker microservice name may contain only: only letters and numbers
+    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
+    print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 fi
 
-# Check: exclude entered "-e" but "-a" not 
+# Check: entered "-e" but without "microservice name" or not entered "-a"
 if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
-   print_basename "Error: You have either not entered a \"microservice name\" to exclude or you have not entered the "-a" option."
-   print_basename "Please check your input!"
-   echo -e "\n"
-   show_help
-   exit 0
+    print_basename "Error: You have either not entered \"-e\" with a \"microservice name\" to exclude or you have not entered the \"-a\" option."
+    print_basename "Please check your input!"
+    echo -e "\n"
+    show_help
+    exit 0
 fi
-
-## 
-#if [[ ${IS_EXCLUDE} ]] && [[ -z "${AR_EXCLUDE}" ]]
-#then
-#   print_basename "Error: You have not entered a microservice name."
-#   echo -e "\n"
-#   show_help
-#   exit 0
-#fi
 
 # Check: neither "-n microservice_name" nor "-a" are set
 if [[ ! ${DOCKER_CONTAINER_NAME} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
-   print_basename "Error: You have not entered a microservice name."
-   print_basename "Please check your input!"
-   echo -e "\n"
-   show_help
-   exit 0
+    print_basename "Error: You have not entered a microservice name."
+    print_basename "Please check your input!"
+    echo -e "\n"
+    show_help
+    exit 0
 fi
 
-# 
+# Check: entered microservice(s) exists in array "ar"
+if [[ ${IS_EXCLUDE} ]]
+then
+    #echo -e "\n"
+    print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
+
+    # Initialize array "AR_EXCLUDE" and replace "," with "space"
+    AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))   
+
+    # Run loop for docker microservices
+    for (( j=0; j < ${#AR_EXCLUDE[@]}; j++ ))
+    do
+        # Test if the name exists in array "ar"
+        VAR=
+        VAR=$(echo ${AR_EXCLUDE[j]})
+       
+        if [[ ${ar[*]} =~ $(echo "\<${VAR}\>") ]] 
+        then
+            print_basename "The entered name of docker microservices ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} exists."
+        else
+            print_basename "Error: The entered name docker microservices ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} does not exists."
+            print_basename "Please check your input!"
+            echo -e "\n"
+            show_help
+            exit 0       
+        fi       
+    done
+fi
+
+exit 0
+
+# unset excluded microservices from array "ar" 
 if [[ ${IS_EXCLUDE} ]] 
 then
-   echo -e "\n"
-   print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
+    #echo -e "\n"
+    #print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
 
-   # Initialize array AR_EXCLUDE and replace "," with "space"
-   AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
+    # Initialize array AR_EXCLUDE and replace "," with "space"
+    AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
 
-   # All microservices: loop array "ar" indexes
-   for val in ${!ar[@]}
-   do
-      index=${val}
-      # echo "index: ${index}"
-      value=${ar[$val]}
-      # echo "value: $value"
+    # All microservices: loop array "ar" indexes
+    for val in ${!ar[@]}
+    do
+       index=${val}
+       # echo "index: ${index}"
+       value=${ar[$val]}
+       # echo "value: $value"
 
-      # Excluded microservice(s): loop array "AR_EXCLUDE" indexes and compare values with values of array "ar".
-      for val1 in ${!AR_EXCLUDE[@]}
-      do
-         index1=${val1}
-         #  echo "index1: ${index1}"
-         value1=${AR_EXCLUDE[$val1]}
-         # echo "value1: $value1"
+       # Excluded microservice(s): loop array "AR_EXCLUDE" indexes and compare values with values of array "ar".
+       for val1 in ${!AR_EXCLUDE[@]}
+       do
+           index1=${val1}
+           #  echo "index1: ${index1}"
+           value1=${AR_EXCLUDE[$val1]}
+           # echo "value1: $value1"
 
-         # If result equal excluded microservice then unset in array "ar"
-         if [ "${value1}"  = "${value}" ]; then
-            index_ar=${index}
-             # for debug: echo "Total array length is: ${#ar[@]}"
-             # for debug: echo "Unset value: ${value1}"
-             unset ar[$index_ar]
-             ar_excl=$(echo ${ar[@]})
-             # for debug: echo ${ar_excl[@]}
-         fi
-      done
-   done
-   # Init array without excluded microservice(s)
-   #echo ${ar_excl[@]}
-   ar=($(echo ${ar_excl[@]}))
-   print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
-   echo -e "\n"
+           # If result equal excluded microservice then unset in array "ar"
+           if [ "${value1}"  = "${value}" ]; then
+               index_ar=${index}
+               # for debug: echo "Total array length is: ${#ar[@]}"
+               # for debug: echo "Unset value: ${value1}"
+               unset ar[$index_ar]
+               ar_excl=$(echo ${ar[@]})
+               # for debug: echo ${ar_excl[@]}
+           fi
+       done
+    done
+    # Init array without excluded microservice(s)
+    #echo ${ar_excl[@]}
+    ar=($(echo ${ar_excl[@]}))
+    print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+    echo -e "\n"
 fi
 
 #print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
