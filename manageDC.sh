@@ -673,7 +673,7 @@ then
 else
     # Docker microservice name may contain only: only letters and numbers
     ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
-    print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 fi
 
 # Check: entered "-e" but without "microservice name" or not entered "-a"
@@ -686,15 +686,16 @@ then
     exit 0
 fi
 
+## ????????????????????????????
 # Check: neither "-n microservice_name" nor "-a" are set
-if [[ ! ${DOCKER_CONTAINER_NAME} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
-then
-    print_basename "Error: You have not entered a microservice name."
-    print_basename "Please check your input!"
-    echo -e "\n"
-    show_help
-    exit 0
-fi
+#if [[ ! ${DOCKER_CONTAINER_NAME} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
+#then
+#    print_basename "Error: You have not entered a microservice name."
+#    print_basename "Please check your input!"
+#    echo -e "\n"
+#    show_help
+#    exit 0
+#fi
 
 # Check: entered microservice(s) exists in array "ar"
 if [[ ${IS_EXCLUDE} ]]
@@ -724,8 +725,6 @@ then
         fi       
     done
 fi
-
-exit 0
 
 # unset excluded microservices from array "ar" 
 if [[ ${IS_EXCLUDE} ]] 
