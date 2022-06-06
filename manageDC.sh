@@ -489,15 +489,18 @@ show_help() {
     echo "Options:"
     echo " "
     echo "  -a, --all         Alle docker container. Must not be used together with OPTION -n, --name"
-    echo "  -c, --config      Path to docker-compose binary; Default: /usr/local/bin"
+    echo "  -c, --config      Path to docker-compose binary; Default: \"/usr/local/bin\""
+    echo "  -e, --exclude     List of excluded microservices separated by comma. Applies together with the -a option"
     echo "  -h, --help        Show help and exit."
     echo "  -n, --name        Set docker container name. Must not be used together with OPTION -a, --all"
-    echo "  -s, --savepath    Path to save location of docker container; Default: /opt"
+    echo "  -s, --savepath    Path to save location of docker container; Default: \"/opt\""
     echo "  -v, --version     Show script version and exit."
     echo " "
-    echo "Example1: ${basename} -c /usr/bin -s /opt/containerName -n CONTAINER_NAME start"
+    echo "Example1: ${basename} -c /usr/local/bin -s /opt -n CONTAINER_NAME start"
+    echo "Example1: ${basename} -c /usr/local/bin -s /opt -a -e \"microservice-name1,microservice-name2,microservice-name3\""
+    echo "Example1: ${basename} -a -e \"microservice-name1,microservice-name2,microservice-name3\" update"
     echo "Example2: ${basename} -n CONTAINER_NAME stop"
-    echo "Example3: ${basename} -s /opt/containerName -a update"
+    echo "Example3: ${basename} -s /opt -a update"
     echo "Example3: ${basename} list"
     echo " "
 }
@@ -512,6 +515,7 @@ IS_STOP=""
 IS_RESTART=""
 IS_UPDATE=""
 IS_LIST=""
+IS_EXCLUDE=""
 
 # Process command line arguments
 POSITIONAL_ARGS=()
@@ -526,6 +530,12 @@ do
         -c|--config)
             shift
             DOCKER_COMPOSE_PATH=$1
+            shift
+            ;;
+        -e|--exclude)
+            IS_EXCLUDE="1"
+            shift
+            AR_EXCLUDE=$1
             shift
             ;;
         -h|--help)
@@ -659,10 +669,87 @@ if [[ "${HYPHEN_ON}" = true ]]
 then
    # Docker microservice name may contain only: letters, numbers and hyphen
    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
+   print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 else
    # Docker microservice name may contain only: only letters and numbers
    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
+   print_basename "ALL docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 fi
+
+# Check: exclude entered "-e" but "-a" not 
+if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
+then
+   print_basename "Error: You have either not entered a \"microservice name\" to exclude or you have not entered the "-a" option."
+   print_basename "Please check your input!"
+   echo -e "\n"
+   show_help
+   exit 0
+fi
+
+## 
+#if [[ ${IS_EXCLUDE} ]] && [[ -z "${AR_EXCLUDE}" ]]
+#then
+#   print_basename "Error: You have not entered a microservice name."
+#   echo -e "\n"
+#   show_help
+#   exit 0
+#fi
+
+# Check: neither "-n microservice_name" nor "-a" are set
+if [[ ! ${DOCKER_CONTAINER_NAME} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
+then
+   print_basename "Error: You have not entered a microservice name."
+   print_basename "Please check your input!"
+   echo -e "\n"
+   show_help
+   exit 0
+fi
+
+# 
+if [[ ${IS_EXCLUDE} ]] 
+then
+   echo -e "\n"
+   print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
+
+   # Initialize array AR_EXCLUDE and replace "," with "space"
+   AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
+
+   # All microservices: loop array "ar" indexes
+   for val in ${!ar[@]}
+   do
+      index=${val}
+      # echo "index: ${index}"
+      value=${ar[$val]}
+      # echo "value: $value"
+
+      # Excluded microservice(s): loop array "AR_EXCLUDE" indexes and compare values with values of array "ar".
+      for val1 in ${!AR_EXCLUDE[@]}
+      do
+         index1=${val1}
+         #  echo "index1: ${index1}"
+         value1=${AR_EXCLUDE[$val1]}
+         # echo "value1: $value1"
+
+         # If result equal excluded microservice then unset in array "ar"
+         if [ "${value1}"  = "${value}" ]; then
+            index_ar=${index}
+             # for debug: echo "Total array length is: ${#ar[@]}"
+             # for debug: echo "Unset value: ${value1}"
+             unset ar[$index_ar]
+             ar_excl=$(echo ${ar[@]})
+             # for debug: echo ${ar_excl[@]}
+         fi
+      done
+   done
+   # Init array without excluded microservice(s)
+   #echo ${ar_excl[@]}
+   ar=($(echo ${ar_excl[@]}))
+   print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+   echo -e "\n"
+fi
+
+#print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+#exit 0
 
 RES1=""
 COMMAND=${DOCKER_COMPOSE_PATH}/docker-compose
