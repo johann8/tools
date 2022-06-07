@@ -9,7 +9,7 @@ set -o errexit
 ### Set variables
 #
 basename="${0##*/}"
-SCRIPT_VERSION="0.1.9"                  # Set script version
+SCRIPT_VERSION="0.2.0"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
