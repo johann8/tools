@@ -841,7 +841,7 @@ fi
 #echo ""
 #echo ${ar[*]}
 
-exit 0
+#exit 0
 
 RES1=""
 COMMAND=${DOCKER_COMPOSE_PATH}/docker-compose
