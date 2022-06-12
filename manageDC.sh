@@ -721,7 +721,7 @@ do
             ;;
         list)
             IS_LIST=1
-            print_basename "Will list all docker microservices: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
+            print_basename "Will list all docker microservices."
             ;;
         status)
             IS_STATUS=1
