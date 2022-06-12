@@ -5,20 +5,7 @@
 #
 set -o errexit
 
-#
-### Set variables
-#
-basename="${0##*/}"
-SCRIPT_VERSION="0.2.0"                  # Set script version
-TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
-# Shared DB between containers
-DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
-DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
-HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 
-##############################################################################
-# >>> Normaly there is no need to change anything below this comment line. ! #
-##############################################################################
 #
 ### define colors
 #
@@ -27,8 +14,42 @@ bluef="${esc}[34m"; redf="${esc}[31m"; yellowf="${esc}[33m"; greenf="${esc}[32m"
 boldon="${esc}[1m"; boldoff="${esc}[22m"
 reset="${esc}[0m"
 
-# define functions
 #
+### === Set variables ===
+#
+basename="${0##*/}"
+# Print script name
+print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
+SCRIPT_VERSION="0.2.0"                  # Set script version
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
+# Shared DB between containers
+DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
+DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
+HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
+SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
+
+#
+DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
+CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
+# get all docker microservices and save in an array
+if [[ "${HYPHEN_ON}" = true ]]
+then
+    # Docker microservice name may contain only: letters, numbers and hyphen
+    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
+    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+else
+    # Docker microservice name may contain only: only letters and numbers
+    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
+    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+fi
+
+##############################################################################
+# >>> Normaly there is no need to change anything below this comment line. ! #
+##############################################################################
+#
+### define functions
+#
+
 # ======= Functions =========
 # print error
 error_exit() {
@@ -37,11 +58,6 @@ error_exit() {
         print_basename "$1 returned non-zero exit code: terminating"
     fi
     exit 1
-}
-
-# Print script name
-print_basename() {
-   echo "${pinkf}${basename}:${reset} $1"
 }
 
 # Function print kopf
@@ -127,18 +143,10 @@ start_dc() {
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         print_basename "To start container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}, other containers must be started as well: ${cyanf}\"${ar_db[*]}\"${reset}"
-
-         #if [ x${ALL_DOCKER_CONTAINER} = x1 ]
-         #then
-         #   continue
-         #else 
-         #   echo ""
-         #   f_promtConfigYN "Do you also want to start thes microservices?" "y/n" "A_ANSWER"
-         #fi
+         print_basename "To start docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}, other microservices must be started as well: ${cyanf}\"${ar_db[*]}\"${reset}"
 
          echo ""    
-         f_promtConfigYN "Do you also want to start thes microservices?" "y/n" "A_ANSWER"
+         f_promtConfigYN "Do you also want to start those microservices?" "y/n" "A_ANSWER"
 
          # Start all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]
@@ -146,12 +154,11 @@ start_dc() {
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and start them
             for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
-               print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
+               print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
                print_kopf
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
                print_basename "RUN: ${COMMAND} up -d"
                ${COMMAND} up -d
-               #echo ""
                sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
@@ -168,35 +175,31 @@ start_dc() {
                   exit 0
                fi
                print_basename "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-               #echo ""
             done
-            #exit 0
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
-            print_basename "Starting of docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is canceled!"
+            print_basename "Starting of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is canceled!"
             exit 0
          fi
       else
          print_basename "INFO: Shared DB does not exist!"
          # start container
-         print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
+         print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
          print_kopf
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
          print_basename "RUN: ${COMMAND} up -d"
          ${COMMAND} up -d
-         #echo "" 
          sleep 5
          print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
    else
       # start
-      print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
+      print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
       print_kopf
       cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
       print_basename "RUN: ${COMMAND} up -d"
       ${COMMAND} up -d
-      #echo "" 
       sleep 5
       print_basename "RUN: ${COMMAND} ps"
       ${COMMAND} ps
@@ -238,9 +241,9 @@ stop_dc() {
          print_basename "Total array length is: ${#ar_db[@]}"
          print_basename "Found the following microservices: ${cyanf}\"${ar_db[*]}\"${reset}"
          echo ""
-         print_basename "To stop container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}, other containers must be stopped as well: ${cyanf}\"${ar_db[*]}\"${reset}"
+         print_basename "To stop docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}, other microservices must be stopped as well: ${cyanf}\"${ar_db[*]}\"${reset}"
          #echo ""
-         f_promtConfigYN "Do you also want to stop these containers?" "y/n" "A_ANSWER"
+         f_promtConfigYN "Do you also want to stop these microservices?" "y/n" "A_ANSWER"
 
          # Stop all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]
@@ -248,12 +251,11 @@ stop_dc() {
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and stop them
             for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
-               print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
+               print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
                print_kopf
                cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
                print_basename "RUN: ${COMMAND} down"
                ${COMMAND} down
-               #echo "" 
                sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
@@ -266,38 +268,35 @@ stop_dc() {
                print_foot
                if [[ ${RES1} == 1 ]]
                then
-                  error_exit "'Error stopping docker container'"
+                  error_exit "'Error stopping docker microservice'"
                   exit 0
                fi
-               print_basename "Stopping docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-               #echo ""
+               print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
-            print_basename "Stopping of docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is canceled!"
+            print_basename "Stopping of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is canceled!"
             exit 0
          fi
       else
          print_basename "INFO: Shared DB does not exist!"
          # stop container
-         print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
+         print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
          print_kopf
          cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
          print_basename "RUN: ${COMMAND} down"
          ${COMMAND} down
-         #echo "" 
          sleep 5
          print_basename "RUN: ${COMMAND} ps"
          ${COMMAND} ps
       fi
    else
        # stop container
-       print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
+       print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
        print_kopf
        cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
        print_basename "RUN: ${COMMAND} down"
        ${COMMAND} down
-       #echo "" 
        sleep 5
        print_basename "RUN: ${COMMAND} ps"
        ${COMMAND} ps
@@ -306,7 +305,7 @@ stop_dc() {
 
 start_dc_all() {
    # start container for Option: -a
-   print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
+   print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
    print_kopf
    cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
    print_basename "RUN: ${COMMAND} up -d"
@@ -318,7 +317,7 @@ start_dc_all() {
 
 stop_dc_all() {
    # stop container for Option: -a
-   print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
+   print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
    print_kopf
    cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
    print_basename "RUN: ${COMMAND} down"
@@ -347,7 +346,7 @@ update_dc() {
    #
    if [[ -z "${CONTAINER_NAME}" ]]
    then
-      print_basename "ERROR: Dcocker container name does not exist!"
+      print_basename "ERROR: Docker container name does not exist!"
       exit 0
    fi
 
@@ -391,9 +390,9 @@ update_dc() {
 dc_status() {
    _DC_STATUS=$( docker ps -a -f name=${DOCKER_MICROSERVICE_NAME} | grep ${DOCKER_MICROSERVICE_NAME} 2> /dev/null )
    if [[ ! -z ${_DC_STATUS} ]]; then
-      print_basename "Container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} has status: $( echo ${_DC_STATUS} | awk '{ print $7 }' )"
+      print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} has status: $( echo ${_DC_STATUS} | awk '{ print $7 }' )"
    else
-      print_basename "Container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} has status: Down"
+      print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} has status: Down"
       break
    fi
 }
@@ -435,8 +434,6 @@ check_shared_db_start() {
 
 # Reorder bash array for stop, if shared db exists
 check_shared_db_stop() {
-   #DB_CONTAINER_NAME=mariadb
-   #DB_NETWORK=mysqlNet
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
@@ -478,36 +475,34 @@ show_help() {
     echo " "
     echo "Actions:"
     echo " "
-    echo "  stop              Stop docker container"
-    echo "  start             Start docker container"
-    echo "  restrat           Restart docker container"
-    echo "  update            Update docker container."
+    echo "  stop              Stop docker microservice"
+    echo "  start             Start docker microservice"
+    echo "  restrat           Restart docker microservice"
+    echo "  update            Update docker microservice."
     echo "  list              List all docker microservices."
-    echo "  status            Status of docker container."
-    echo "  logs              Logs of docker container."
+    echo "  status            Status of docker microservice."
+    echo "  logs              Logs of docker microservice."
     echo " "
     echo "Options:"
     echo " "
-    echo "  -a, --all         Alle docker container. Must not be used together with OPTION -n, --name"
+    echo "  -a, --all         Alle docker microservices. Must not be used together with OPTION -n, --name"
     echo "  -c, --config      Path to docker-compose binary; Default: \"/usr/local/bin\""
     echo "  -e, --exclude     List of excluded microservices separated by comma. Applies together with the -a option"
     echo "  -h, --help        Show help and exit."
-    echo "  -n, --name        Set docker container name. Must not be used together with OPTION -a, --all"
-    echo "  -s, --savepath    Path to save location of docker container; Default: \"/opt\""
+    echo "  -n, --name        Set docker microservice name. Must not be used together with OPTION -a, --all"
+    echo "  -s, --savepath    Path to save location of docker microservice; Default: \"/opt\""
     echo "  -v, --version     Show script version and exit."
     echo " "
     echo "Example1: ${basename} -c /usr/local/bin -s /opt -n CONTAINER_NAME start"
     echo "Example1: ${basename} -c /usr/local/bin -s /opt -a -e \"microservice-name1,microservice-name2,microservice-name3\""
     echo "Example1: ${basename} -a -e \"microservice-name1,microservice-name2,microservice-name3\" update"
-    echo "Example2: ${basename} -n CONTAINER_NAME stop"
+    echo "Example2: ${basename} -n DOCKER_MICROSERVICE_NAME stop"
     echo "Example3: ${basename} -s /opt -a update"
     echo "Example3: ${basename} list"
     echo " "
 }
 
 # Variables to be read/populated based on command line
-DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
-CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
 ALL_DOCKER_CONTAINER=""
 DOCKER_MICROSERVICE_NAME=""
 IS_START=""
@@ -528,8 +523,50 @@ do
             shift
             ;;
         -c|--config)
+            IS_CONFIG="1"
             shift
             DOCKER_COMPOSE_PATH=$1
+            if [[ ${IS_CONFIG} ]]; then
+                # Check: Docker Compose Path entered
+                if [[ ${DOCKER_COMPOSE_PATH} =~ (stop|start|restart|update|list|status|logs) ]]; then
+                    print_basename "You have not entered a path to \"Docker Compose\"."
+                    print_basename "Path to \"Docker Compose\" needs to be given as absolute path (starting with /)."
+                    echo -e "\n"
+                    show_help
+                    exit 1
+                fi
+                # Check: Path is given as absolute path (starting with /)
+                if [[ ! ${DOCKER_COMPOSE_PATH} =~ ^/ ]]; then
+                    print_basename "Path to \"Docker Compose\" needs to be given as absolute path (starting with /)."
+                    echo -e "\n"
+                    show_help
+                    exit 1
+                fi
+                # Check: Docker Compose Path is no File
+                if [[ -f ${DOCKER_COMPOSE_PATH} ]]; then
+                    print_basename "${DOCKER_COMPOSE_PATH} is a file!"
+                    echo -e "\n"
+                    show_help
+                    exit 1
+                fi
+                # Check: Docker Compose Binary exists im path
+                if [[ -n "${DOCKER_COMPOSE_PATH}" ]]
+                then
+                    #echo ${DOCKER_COMPOSE_PATH}
+                    if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
+                    then
+                        print_basename "Docker-Compose binary exists."
+                        if [[ $? -ne 0 ]]
+                        then
+                            print_basename "Docker-Compose binary does not exist."
+                            exit 1
+                         fi
+                    else
+                        print_basename "ERROR: Docker-Compose binary not found: \"${DOCKER_COMPOSE_PATH}/docker-compose\""
+                        exit 1
+                    fi
+                fi
+            fi
             shift
             ;;
         -e|--exclude)
@@ -546,11 +583,48 @@ do
             IS_NAME=1
             shift
             DOCKER_MICROSERVICE_NAME=$1
+            if [[ ${IS_NAME} ]]; then
+                if [[ ${DOCKER_MICROSERVICE_NAME} =~ (stop|start|restart|update|list|status|logs) ]]; then
+                    print_basename "Error: The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exists."
+                    print_basename "You have either entered no docker microservice name at all or an incorrect name"
+                    print_basename "Please check your input!"
+                    echo -e "\n"
+                    show_help
+                    exit 1                
+                else
+                    if [[ ${ar[*]} =~ $(echo "\<${DOCKER_MICROSERVICE_NAME}\>") ]]; then
+                        print_basename "The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} exists."
+                    else
+                        print_basename "Error: The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exists."
+                        print_basename "The found docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+                        print_basename "Please check your input!"
+                        exit 1
+                    fi
+                fi
+            fi 
             shift
             ;;
         -s|--savepath)
+            IS_SAVEPATH="1"
             shift
             CONTAINER_SAVE_PATH=$1
+            if [[ ${IS_SAVEPATH} ]]; then
+                # Check: Docker microservice(s) entered
+                if [[ ${CONTAINER_SAVE_PATH} =~ (stop|start|restart|update|list|status|logs) ]]; then
+                    print_basename "You have not entered a path to Docker microservice(s)."
+                    print_basename "Docker microservice(s) directory path needs to be given as absolute path (starting with /)."
+                    echo -e "\n"
+                    show_help
+                    exit 1                 
+                fi
+                # Check: Path is given as absolute path (starting with /) 
+                if [[ ! ${CONTAINER_SAVE_PATH} =~ ^/ ]]; then
+                    print_basename "Docker microservice(s) directory path needs to be given as absolute path (starting with /)."
+                    echo -e "\n"
+                    show_help
+                    exit 1
+                fi
+            fi
             shift
             ;;
         -v|--version)
@@ -569,22 +643,6 @@ do
     esac
 done
 
-## Check: Entered the name of docker microservice
-#if [[ ${IS_NAME} ]]
-#then
-#    # Check if the name of docker microservice entered
-#    if [[ -z ${DOCKER_MICROSERVICE_NAME} ]]
-#    then
-#        print_basename "Error: You have forgotten to enter the docker microservice name."
-#        print_basename "Please check your input!"
-#        echo -e "\n"
-#        show_help
-#        exit 0
-#    #else
-#    #    print_basename "The name of docker microservice is: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
-#    fi
-#fi
-
 # Expect to get an action command as a positional argument.
 if [[ -z $POSITIONAL_ARGS ]]
 then
@@ -595,20 +653,23 @@ then
 fi
 
 # check docker-compose binary
-if [[ -n "${DOCKER_COMPOSE_PATH}" ]]
+if [[ ! ${IS_CONFIG} ]]
 then
-    #echo ${DOCKER_COMPOSE_PATH}
-    if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
+    if [[ -n "${DOCKER_COMPOSE_PATH}" ]]
     then
-        print_basename "Docker-Compose binary exists."
-        if [[ $? -ne 0 ]]
+        #echo ${DOCKER_COMPOSE_PATH}
+        if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
         then
-            print_basename "Docker-Compose binary does not exist."
+            print_basename "Docker-Compose binary exists."
+            if [[ $? -ne 0 ]]
+            then
+                print_basename "Docker-Compose binary does not exist."
+                exit 1
+            fi
+        else
+            echo "${basename} ERROR: Docker-Compose binary did not found: '${DOCKER_COMPOSE_PATH}/docker-compose'"
             exit 1
         fi
-    else
-        echo "${basename} ERROR: Docker-Compose binary did not found: '${DOCKER_COMPOSE_PATH}/docker-compose'"
-        exit 1
     fi
 fi
 
@@ -678,21 +739,6 @@ do
     esac
 done
 
-
-# get all docker microservices and save in an array
-# The name must contain only letters and numbers
-#ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}'))
-if [[ "${HYPHEN_ON}" = true ]]
-then
-    # Docker microservice name may contain only: letters, numbers and hyphen
-    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
-    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
-else
-    # Docker microservice name may contain only: only letters and numbers
-    ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
-    print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
-fi
-
 # Check: entered "-e" but without "microservice name" or not entered "-a"
 if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
@@ -701,21 +747,6 @@ then
     echo -e "\n"
     show_help
     exit 0
-fi
-
-# Check: Entered name of docker microservice
-if [[ ${IS_NAME} ]]
-then
-    if [[ ${ar[*]} =~ $(echo "\<${DOCKER_MICROSERVICE_NAME}\>") ]]
-    then
-        print_basename "The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} exists."
-    else
-        print_basename "Error: The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exists."
-        print_basename "Please check your input!"
-        echo -e "\n"
-        show_help
-        exit 0
-    fi
 fi
 
 # Check: neither "-n microservice_name" nor "-a" are set
@@ -728,7 +759,7 @@ then
     exit 0
 fi
 
-# Check: entered microservice(s) exists in array "ar"
+# Check: entered to exclude microservice(s) exists in array "ar"
 if [[ ${IS_EXCLUDE} ]]
 then
     #echo -e "\n"
@@ -746,9 +777,9 @@ then
        
         if [[ ${ar[*]} =~ $(echo "\<${VAR}\>") ]] 
         then
-            print_basename "The entered name of docker microservices ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} exists."
+            print_basename "The entered name of docker microservice(s) ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} exists."
         else
-            print_basename "Error: The entered name docker microservices ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} does not exists."
+            print_basename "Error: The entered name docker microservice(s) ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} does not exists."
             print_basename "Please check your input!"
             echo -e "\n"
             show_help
@@ -800,8 +831,17 @@ then
     echo -e "\n"
 fi
 
-#print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
-#exit 0
+# 
+#print_basename "All Script Arguments are: ${cyanf}\"${SCRIPT_ARG}\"${reset}"
+#echo -n "${SCRIPT_ARG}"
+#CHECK_INPUT_DATA=$(echo -n "${SCRIPT_ARG}" | sed -e 's/\<stop\>//;s/\<start\>//;s/\<restart\>//;s/update//;s/list//;s/status//;s/logs//')
+#INPUT_MS_NAME=$(echo -n "${CHECK_INPUT_DATA}" |sed -e 's/-n //;s/ //')
+#echo ""
+#echo -n "$VAR1"
+#echo ""
+#echo ${ar[*]}
+
+exit 0
 
 RES1=""
 COMMAND=${DOCKER_COMPOSE_PATH}/docker-compose
@@ -820,7 +860,7 @@ then
     then
         error_exit "'Error starting docker microservice'"
     fi
-    print_basename "Sarting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+    print_basename "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     exit 0
 fi
 
