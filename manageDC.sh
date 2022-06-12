@@ -628,6 +628,7 @@ do
             shift
             ;;
         -v|--version)
+            print_basename "Will show script version."
             show_version
             exit
             ;;
