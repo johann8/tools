@@ -902,7 +902,7 @@ then
         error_exit "'Error restarting docker microservices!"
     fi
     print_end
-    print_basename "Restarting docker microservices ${cyanf}\"${ar_db[*]}\"${reset} done!"
+    print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     exit 0
 fi
 
