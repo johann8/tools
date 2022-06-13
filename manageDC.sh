@@ -373,16 +373,32 @@ update_dc() {
 
    # Update / Exit
    if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
-     echo " "
-     echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
-     echo "Update von Docker Image ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} wird gestartet..."
-     cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
-     ${DOCKER_COMPOSE_PATH}/docker-compose down && ${DOCKER_COMPOSE_PATH}/docker-compose up -d
-     docker rmi $(docker images -f "dangling=true" -q --no-trunc)
+      echo " "
+      echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
+      print_basename "Update from docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is started..."
+      #cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
+      stop_dc
+      print_foot
+      start_dc
+
+      #if [[ $? -ne 0 ]]
+      #then
+      #   RES1=1
+      #fi
+
+      # print_foot
+      #if [[ ${RES1} == 1 ]]
+      #then
+      #    error_exit "'Error restarting docker microservices!"
+      #fi
+      #print_end
+      #print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+      #${DOCKER_COMPOSE_PATH}/docker-compose down && ${DOCKER_COMPOSE_PATH}/docker-compose up -d
+      #docker rmi $(docker images -f "dangling=true" -q --no-trunc)
    else
-     echo " "
-     echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
-     print_basename "Es ist kein Update von Docker Image ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} vorhanden."
+      echo " "
+      echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
+      print_basename "There is no update from docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}."
    fi
 }
 
@@ -861,7 +877,7 @@ then
     then
         error_exit "'Error starting docker microservice'"
     fi
-    print_basename "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+    print_basename "Starting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -880,7 +896,7 @@ then
     then
         error_exit "'Error stopping docker microservice'"
     fi
-    print_basename "Stopping docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+    print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     exit 0
 fi
 
@@ -1007,7 +1023,7 @@ then
    then
       # Print message
       echo -e "\n"
-      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
       echo ""
     
       # Reorder bash array for start, if shared db exists
@@ -1026,9 +1042,9 @@ then
 
          if [[ ${RES1} == 1 ]]
          then
-            error_exit "'Error starting docker container '"
+            error_exit "'Error starting docker microservice'"
          fi
-         print_basename "Sarting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         print_basename "Sarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
       done
@@ -1040,7 +1056,7 @@ then
    then
       # Print message
       echo -e "\n"
-      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
       echo -e "\n"
       
       # Reorder bash array for stop, if shared db exists
@@ -1060,9 +1076,9 @@ then
          #print_foot
          if [[ ${RES1} == 1 ]]
          then
-            error_exit "'Error stopping docker container'"
+            error_exit "'Error stopping docker microservice'"
          fi
-         print_basename "Stopping docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"  
       done
@@ -1074,7 +1090,7 @@ then
    then
       # Print message
       echo -e "\n"
-      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
       echo -e "\n"
 
       # Reorder bash array for stop, if shared db exists
@@ -1095,10 +1111,10 @@ then
 
          if [[ ${RES1} == 1 ]]
          then
-             error_exit "'Error stoping docker container'"
+             error_exit "'Error stoping docker microservice'"
              exit 0
          fi
-         print_basename "Stopping docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
       done
@@ -1106,13 +1122,13 @@ then
       # Print message
       if [[ ${RES_STOP} == 1 ]]
       then        
-         print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
          print_end
       fi
 
       # Print message
       echo -e "\n\n"
-      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
       echo ""
       # Reorder bash array for stop, if shared db exists
       check_shared_db_start
@@ -1132,10 +1148,10 @@ then
 
          if [[ ${RES1} == 1 ]]
          then
-             error_exit "'Error starting docker container'"
+             error_exit "'Error starting docker microservice'"
              exit 0
          fi
-         print_basename "Restarting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
       done
@@ -1143,7 +1159,7 @@ then
       # Print message
       if [[ ${RES_START} == 1 ]]
       then
-         print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker microservice done!!! *** ========"
          print_end
       fi
 
@@ -1154,7 +1170,7 @@ then
    if [[ ${IS_UPDATE} ]]
    then
       echo -e "\n"
-      print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker container!!! *** ========"
+      print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
       echo -e "\n"
 
       # Reorder bash array for stop, if shared db exists
@@ -1176,9 +1192,9 @@ then
          print_foot
          if [[ ${RES1} == 1 ]]
          then
-             error_exit "'Error updating docker container'"
+             error_exit "'Error updating docker microservice'"
          fi
-         print_basename "Updating docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         print_basename "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
       done
@@ -1186,7 +1202,7 @@ then
       # Print message
       if [[ ${RES_START} == 1 ]]
       then
-         print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker container done!!! *** ========"
+         print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
          print_end
       fi
 
