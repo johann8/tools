@@ -35,14 +35,10 @@ CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
 if [[ "${HYPHEN_ON}" = true ]]
 then
     # Docker microservice name may contain only: letters, numbers and hyphen
-    #ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9-]'))
     ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml | sed 's+/[^/]*$++' | sed 's+^.*/++' | grep -v '[^A-Za-z0-9-]'))
-    #print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 else
     # Docker microservice name may contain only: only letters and numbers
-    #ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml| awk -F'/' '{print $3}' | grep -v '[^A-Za-z0-9]'))
     ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml | sed 's+/[^/]*$++' | sed 's+^.*/++' | grep -v '[^A-Za-z0-9]'))
-    #print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 fi
 
 ##############################################################################
