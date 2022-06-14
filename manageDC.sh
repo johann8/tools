@@ -378,21 +378,9 @@ update_dc() {
       stop_dc
       print_foot
       start_dc
-
-      #if [[ $? -ne 0 ]]
-      #then
-      #   RES1=1
-      #fi
-
-      # print_foot
-      #if [[ ${RES1} == 1 ]]
-      #then
-      #    error_exit "'Error restarting docker microservices!"
-      #fi
-      #print_end
-      #print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-      #${DOCKER_COMPOSE_PATH}/docker-compose down && ${DOCKER_COMPOSE_PATH}/docker-compose up -d
-      #docker rmi $(docker images -f "dangling=true" -q --no-trunc)
+      
+      # remove old images
+      docker rmi $(docker images -f "dangling=true" -q --no-trunc)
    else
       echo " "
       echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
