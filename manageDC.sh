@@ -378,6 +378,8 @@ update_dc() {
       stop_dc
       print_foot
       start_dc
+      print_foot
+      echo " "
       
       # remove old images
       docker rmi $(docker images -f "dangling=true" -q --no-trunc)
