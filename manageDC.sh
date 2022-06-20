@@ -332,20 +332,25 @@ update_dc() {
    if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh ]]
    then
       # read docker container image from update.sh
-      print_basename "Script \"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\" exists."
+      print_basename "Script ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset} exists."
       CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
       print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
    else
       # read docker container image from docker-compose.yml
-      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //' |grep "^${DOCKER_MICROSERVICE_NAME}")
-      print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
-   fi
-   
-   #
-   if [[ -z "${CONTAINER_NAME}" ]]
-   then
-      print_basename "ERROR: Docker container name does not exist!"
-      exit 0
+      #CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //' |grep "^${DOCKER_MICROSERVICE_NAME}")
+      ar_cn=($(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //'))
+
+      # check: var CONTAINER_NAME is empty or not
+      if [[ ${ar_cn[*]} =~ $(echo "\<${DOCKER_MICROSERVICE_NAME}\>") ]]
+      then
+          CONTAINER_NAME=${DOCKER_MICROSERVICE_NAME}
+          print_basename "Docker container name is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
+          exit 0
+      else
+          print_basename "ERROR: Docker container name ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exist!"
+          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset}"
+          exit 0
+      fi
    fi
 
    echo ${greenf}=================================================================${reset}
