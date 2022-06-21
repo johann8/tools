@@ -28,9 +28,12 @@ DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
 
-#
+# Set Pathes
+DOCKER_COMPOSE_PATH=""
+CONTAINER_SAVE_PATH=""
 DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
 CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
+
 # get all docker microservices and save in an array
 if [[ "${HYPHEN_ON}" = true ]]
 then
@@ -345,7 +348,6 @@ update_dc() {
       then
           CONTAINER_NAME=${DOCKER_MICROSERVICE_NAME}
           print_basename "Docker container name is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
-          exit 0
       else
           print_basename "ERROR: Docker container name ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exist!"
           print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset}"
