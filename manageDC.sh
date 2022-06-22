@@ -30,9 +30,12 @@ SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
 
 # Set Pathes
 DOCKER_COMPOSE_PATH=""
-CONTAINER_SAVE_PATH=""
 DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
-CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
+
+DEFAULT_CONTAINER_SAVE_PATH="/opt"
+FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
+CONTAINER_SAVE_PATH=${FIND_CONTAINER_SAVE_PATH}
+#CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
 
 # get all docker microservices and save in an array
 if [[ "${HYPHEN_ON}" = true ]]
@@ -1198,7 +1201,7 @@ then
       done
 
       # Print message
-      if [[ ${RES_START} == 1 ]]
+      
       then
          print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
          print_end
