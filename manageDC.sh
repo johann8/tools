@@ -33,9 +33,15 @@ DOCKER_COMPOSE_PATH=""
 DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
 
 DEFAULT_CONTAINER_SAVE_PATH="/opt"
-FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
-CONTAINER_SAVE_PATH=${FIND_CONTAINER_SAVE_PATH}
-#CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
+if [[ -f ${DOCKER_COMPOSE_PATH}/docker-compose ]]
+then
+    FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
+    CONTAINER_SAVE_PATH=${FIND_CONTAINER_SAVE_PATH}
+    #CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
+else
+    print_basename "ERROR: Docker-Compose binary not found: \"${DOCKER_COMPOSE_PATH}/docker-compose\""
+    exit 1
+fi
 
 # get all docker microservices and save in an array
 if [[ "${HYPHEN_ON}" = true ]]
@@ -569,12 +575,7 @@ do
                     #echo ${DOCKER_COMPOSE_PATH}
                     if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
                     then
-                        print_basename "Docker-Compose binary exists."
-                        if [[ $? -ne 0 ]]
-                        then
-                            print_basename "Docker-Compose binary does not exist."
-                            exit 1
-                         fi
+                        print_basename "Success: Docker-Compose binary exists."
                     else
                         print_basename "ERROR: Docker-Compose binary not found: \"${DOCKER_COMPOSE_PATH}/docker-compose\""
                         exit 1
