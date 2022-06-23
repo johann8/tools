@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.2.8"                  # Set script version
+SCRIPT_VERSION="0.2.9"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -757,20 +757,31 @@ do
     esac
 done
 
-# Check: entered "-e" but without "microservice name" or not entered "-a"
-if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
+# Check: options "-n" and "-e" must not be set at the same time
+if [[ ${IS_NAME} ]] && [[ ${IS_EXCLUDE} ]]
 then
-    print_basename "Error: You have either not entered \"-e\" with a \"microservice name\" to exclude or you have not entered the \"-a\" option."
+    print_basename "Error: The options \"-n\" and \"-e\" must not be set at the same time"
     print_basename "Please check your input!"
     echo -e "\n"
     show_help
     exit 0
 fi
 
-# Check: neither "-n microservice_name" nor "-a" are set
+# Check: options "-n" and "-a" must not be set at the same time
 if [[ ${IS_NAME} ]] && [[ ${ALL_DOCKER_CONTAINER} ]]
 then
-    print_basename "Error: The options \"-a\" and \"-e\" must not be set at the same time"
+    print_basename "Error: The options \"-n\" and \"-a\" must not be set at the same time"
+    print_basename "Please check your input!"
+    echo -e "\n"
+    show_help
+    exit 0
+fi
+
+
+# Check: entered "-e" but without "microservice name" or not entered "-a"
+if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
+then
+    print_basename "Error: You have either not entered \"-e\" with a \"microservice name\" to exclude or you have not entered the \"-a\" option."
     print_basename "Please check your input!"
     echo -e "\n"
     show_help
