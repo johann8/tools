@@ -1213,7 +1213,7 @@ then
       done
 
       # Print message
-      
+      if [[ ${RES_START} == 1 ]]
       then
          print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
          print_end
