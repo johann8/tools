@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.2.9"                  # Set script version
+SCRIPT_VERSION="0.3.0"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -796,7 +796,7 @@ then
     print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
 
     # Initialize array "AR_EXCLUDE" and replace "," with "space"
-    AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))   
+    AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
 
     # Run loop for docker microservices
     for (( j=0; j < ${#AR_EXCLUDE[@]}; j++ ))
@@ -804,8 +804,8 @@ then
         # Test if the name exists in array "ar"
         VAR=
         VAR=$(echo ${AR_EXCLUDE[j]})
-       
-        if [[ ${ar[*]} =~ $(echo "\<${VAR}\>") ]] 
+
+        if [[ ${ar[*]} =~ $(echo "\<${VAR}\>") ]]
         then
             print_basename "The entered name of docker microservice(s) ${cyanf}\"${AR_EXCLUDE[j]}\"${reset} exists."
         else
@@ -813,19 +813,9 @@ then
             print_basename "Please check your input!"
             echo -e "\n"
             show_help
-            exit 0       
-        fi       
+            exit 0
+        fi
     done
-fi
-
-# unset excluded microservices from array "ar" 
-if [[ ${IS_EXCLUDE} ]] 
-then
-    #echo -e "\n"
-    #print_basename "The following microservice(s) will be excluded from the action: ${cyanf}\"$(echo ${AR_EXCLUDE[@]})\"${reset}"
-
-    # Initialize array AR_EXCLUDE and replace "," with "space"
-    AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
 
     # All microservices: loop array "ar" indexes
     for val in ${!ar[@]}
@@ -854,11 +844,11 @@ then
            fi
        done
     done
+	
     # Init array without excluded microservice(s)
     #echo ${ar_excl[@]}
     ar=($(echo ${ar_excl[@]}))
     print_basename "Array ${cyanf}\"ar\"${reset} with remaining microservices: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
-    echo -e "\n"
 fi
 
 # 
@@ -1182,9 +1172,10 @@ then
    # Update all docker container
    if [[ ${IS_UPDATE} ]]
    then
-      echo -e "\n"
+      #echo -e "\n"
+      echo ""
       print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
-      echo -e "\n"
+      #echo -e "\n"
 
       # Reorder bash array for stop, if shared db exists
       check_shared_db_stop
@@ -1209,7 +1200,8 @@ then
          fi
          print_basename "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
-         echo -e "\n"
+         #echo -e "\n"
+         echo ""
       done
 
       # Print message
