@@ -92,7 +92,6 @@
 # export RESTIC_REPOSITORY="rest:https://UserName:PassWord@rserver.int.anwalt4u.net:8000/my-repo"  #
 # export RESTIC_PASSWORD="J+0z1zp246zusvgWpQwC9sTC5bGkUoR6xQVTnfimiw8="                            #
 # export CA_CERT="/path/to/public_key/rserver/data/public_key"                                     #
-# export BACKUP_PATHS="/root"                                                                      #
 # export BACKUP_INCLUDES="/path/to/file/backup.files"                                              #
 # export BACKUP_EXCLUDES="/path/to/file/exclude.files"                                             #
 # export RETENTION_POLICY="--keep-daily 5 --keep-weekly 1 --keep-monthly 6 --keep-yearly 1"        #
@@ -354,47 +353,83 @@ then
     wait $!
 fi
 
-if [[ $IS_BACKUP ]]
+#
+### JH changed on 05.07.2022
+# 
+
+if [[  ${ENABLE_REST_SERVER} ]]
 then
-    # Check if at least one backup path is given
-    if [[ -z $BACKUP_PATHS ]]
+    # backup is true 
+    if [[ $IS_BACKUP ]]
     then
-        echo "-bu: Backup path information not found in \$BACKUP_PATHS"
-        exit 1
-    fi
-    echo "-bu: Backup starting"
-    echo "-bu: Backup tag: '$BACKUP_TAG'"
-    echo "-bu: Paths to be included:"
-    PROPOSED_BACKUP_PATHS="$BACKUP_PATHS"
-    BACKUP_PATHS=""
-    for BACKUP_PATH in $PROPOSED_BACKUP_PATHS
-    do
-        if [[ -d $BACKUP_PATH ]]
+        # Check if at least one backup path is given
+        if [[ -z $BACKUP_INCLUDES ]]
         then
-            echo "-bu:     '$BACKUP_PATH'"
-            BACKUP_PATHS="$BACKUP_PATHS $BACKUP_PATH"
-        else
-            if [[ $IS_IGNORE_MISSING ]]
-            then
-                echo "-bu:     '$BACKUP_PATH' [NOT FOUND]"
-            else
-                echo "-bu: ABORTING DUE TO MISSING PATH: '$BACKUP_PATH'"
-                exit 1
-            fi
+            echo "-bu: Backup include information not found in \$BACKUP_INCLUDES"
+            exit 1
         fi
-    done
-    echo "-bu: Paths to be excluded: $BACKUP_EXCLUDES"
-    $RESTIC_PATH backup \
-        --one-file-system \
-        --tag $BACKUP_TAG \
-        $BACKUP_EXCLUDES \
-        $BACKUP_PATHS &
-    wait $!
-    if [[ $? == 1 ]]
-    then
-        error_exit "'restic backup'"
+        echo "-bu: Backup starting"
+        echo "-bu: Backup tag: '$BACKUP_TAG'"
+        echo "-bu: Paths to be included: "
+        echo -e `cat $BACKUP_INCLUDES`
+        echo "-bu: Paths to be excluded: $BACKUP_EXCLUDES"
+        $RESTIC_PATH backup \
+            --one-file-system \
+            --exclude-caches \
+            --files-from $BACKUP_INCLUDES \
+            --exclude-file $BACKUP_EXCLUDES \
+            --tag $BACKUP_TAG &
+            wait $!
+        if [[ $? == 1 ]]
+        then
+            error_exit "'restic backup'"
+        fi
+        echo "-bu: Backup done"
     fi
-    echo "-bu: Backup done"
+else
+    # backup is true
+    if [[ $IS_BACKUP ]]
+    then
+        # Check if at least one backup path is given
+        if [[ -z $BACKUP_PATHS ]]
+        then
+            echo "-bu: Backup path information not found in \$BACKUP_PATHS"
+            exit 1
+        fi
+        echo "-bu: Backup starting"
+        echo "-bu: Backup tag: '$BACKUP_TAG'"
+        echo "-bu: Paths to be included:"
+        PROPOSED_BACKUP_PATHS="$BACKUP_PATHS"
+        BACKUP_PATHS=""
+        for BACKUP_PATH in $PROPOSED_BACKUP_PATHS
+        do
+            if [[ -d $BACKUP_PATH ]]
+            then
+                echo "-bu:     '$BACKUP_PATH'"
+                BACKUP_PATHS="$BACKUP_PATHS $BACKUP_PATH"
+            else
+                if [[ $IS_IGNORE_MISSING ]]
+                then
+                    echo "-bu:     '$BACKUP_PATH' [NOT FOUND]"
+                else
+                    echo "-bu: ABORTING DUE TO MISSING PATH: '$BACKUP_PATH'"
+                    exit 1
+                fi
+            fi
+        done
+        echo "-bu: Paths to be excluded: $BACKUP_EXCLUDES"
+        $RESTIC_PATH backup \
+            --one-file-system \
+            --tag $BACKUP_TAG \
+            $BACKUP_EXCLUDES \
+            $BACKUP_PATHS &
+        wait $!
+        if [[ $? == 1 ]]
+        then
+            error_exit "'restic backup'"
+        fi
+        echo "-bu: Backup done"
+    fi
 fi
 
 if [[ $IS_FORGET_AND_PRUNE ]]
