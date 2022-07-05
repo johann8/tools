@@ -100,7 +100,7 @@
 # ================================================================================================ #
 
 # Set script version
-SCRIPT_VERSION=0.1.1
+SCRIPT_VERSION="0.1.2"
 
 # Enable Rest Server: true or false
 ENABLE_REST_SERVER=true
@@ -164,6 +164,7 @@ show_help() {
     echo "  --ignore-missing  On backup, ignore missing backup paths."
     echo "  --dry-run         Do not actually do anything: just run through"
     echo "                    commands."
+    echo "  -v, --version     Show script version and exit."
 }
 
 # Variables to be read/populated based on command line
@@ -192,6 +193,11 @@ do
             ;;
         -h|--help)
             show_help
+            exit
+            ;;
+        -v|--version)
+            echo "-bu: Will show script version."
+            echo "-bu: Script version is: ${SCRIPT_VERSION}"
             exit
             ;;
         --dry-run)
