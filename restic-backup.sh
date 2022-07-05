@@ -100,7 +100,7 @@
 # ================================================================================================ #
 
 # Set script version
-SCRIPT_VERSION=0.1.0
+SCRIPT_VERSION=0.1.1
 
 # Enable Rest Server: true or false
 ENABLE_REST_SERVER=true
