@@ -68,6 +68,46 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+###
+#
+# ======================================================================== #
+#                                                                          #
+# Adpted from:                                                             #
+#                                                                          #
+#   https://gist.github.com/jeetsukumaran/61ff0033360174cda99ed3b444ba6dac #
+#                                                                          #
+# Added the possibility to backup to a rest server:                        #
+#                                                                          #
+#   https://github.com/restic/rest-server                                  #
+#                                                                          #
+# Modified by Johann Hahn on 05.07.2022                                    #
+#                                                                          #
+# ======================================================================== #
+
+# ================================================================================================ #
+#                                                                                                  #
+# Example of backup configuration file rest server repository:                                     #
+#                                                                                                  #
+# export RESTIC_REPOSITORY="rest:https://UserName:PassWord@rserver.int.anwalt4u.net:8000/my-repo"  #
+# export RESTIC_PASSWORD="J+0z1zp246zusvgWpQwC9sTC5bGkUoR6xQVTnfimiw8="                            #
+# export CA_CERT="/path/to/public_key/rserver/data/public_key"                                     #
+# export BACKUP_PATHS="/root"                                                                      #
+# export BACKUP_INCLUDES="/path/to/file/backup.files"                                              #
+# export BACKUP_EXCLUDES="/path/to/file/exclude.files"                                             #
+# export RETENTION_POLICY="--keep-daily 5 --keep-weekly 1 --keep-monthly 6 --keep-yearly 1"        #
+# export SNAPSHOT_TITLE="primary_work"                                                             #
+#                                                                                                  #
+# ================================================================================================ #
+
+# Set script version
+SCRIPT_VERSION=0.1.0
+
+# Enable Rest Server: true or false
+ENABLE_REST_SERVER=true
+
+# set Path to restic
+RESTIC_COMMAND="${RESTIC_COMMAND:-/usr/local/bin/restic}"
 
 # Log start time
 START_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
