@@ -263,10 +263,14 @@ then
 fi
 
 # Check if at least the repository destination is defined
-if [[ -z $BACKUP_PATHS ]]
+# JH changed on 05.07.2022
+if [[ ! ${ENABLE_REST_SERVER} ]]
 then
-    echo "-bu: Environmental variable \$BACKUP_PATHS specifying path(s) to back up not defined"
-    exit 1
+    if [[ -z $BACKUP_PATHS ]]
+    then
+        echo "-bu: Environmental variable \$BACKUP_PATHS specifying path(s) to back up not defined"
+        exit 1
+    fi
 fi
 
 # Iterate over positional arguments
