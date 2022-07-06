@@ -100,7 +100,10 @@
 # ================================================================================================ #
 
 # Set script version
-SCRIPT_VERSION="0.1.2"
+SCRIPT_VERSION="0.2.0"
+
+# Set path for restic action "mount"
+MOUNT_POINT="/tmp/restic"
 
 # Enable Rest Server: true or false
 ENABLE_REST_SERVER=true
@@ -153,6 +156,8 @@ show_help() {
     echo "  unlock            Unlock a repository in a stale locked state."
     echo "  rebuild           Rebuild the repository index."
     echo "  prune             Prune the repository."
+    echo "  mount             Mount the repository to folder ${MOUNT_POINT}."
+    echo "                    The command is redirected to "screen". Run \"screen -r restic\" and press enter."
     echo ""
     echo "Options:"
     echo ""
@@ -322,6 +327,11 @@ do
             shift
             IS_CHECK=1
             echo "-bu: Will check repository at: '$RESTIC_REPOSITORY'"
+            ;;
+        mount)
+            shift
+            IS_MOUNT=1
+            echo "-bu: Will mount repository at: '$RESTIC_REPOSITORY'"
             ;;
         *)
             echo "-bu: Unrecognized action command: '$POS_ARG'"
@@ -509,6 +519,54 @@ then
         error_exit "'restic check'"
     fi
     echo "-bu: Checking done"
+fi
+
+#
+### JH added on 06.07.2022
+#
+if [[ ${IS_MOUNT} ]]
+then
+    # check screen exists
+    if ! [[ -f /usr/bin/screen ]]
+    then
+        echo "-bu: the package \"screen\" is not installed"
+        echo "-bu: Please install the package \"screen\" first and run script again."
+        exit 1
+    fi
+
+    # check mount.fuse exists
+    if ! [[ -f /usr/sbin/mount.fuse ]]
+    then
+        echo "-bu: the package \"fuse\" is not installed."
+        echo "-bu: Please install the package \"fuse\" first and run script again."
+        exit 1
+    fi
+
+    #
+    if ! ( screen -ls | grep restic > /dev/null)
+    then
+        screen -dmS restic
+    fi
+
+    #
+    if ! [[ -d ${MOUNT_POINT} ]]
+    then
+        mkdir ${MOUNT_POINT}
+    fi
+
+    # Run screen named "restic" in detached mode and passes the command to screen terminal
+    screen -S restic -X stuff "source $(echo ${BACKUP_CONFIGURATION_PATH}); restic mount ${MOUNT_POINT}"
+
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic mount'"
+    fi
+
+    echo "-bu: Mounting done done"
+    echo ""
+    echo "-bu: Please run \"screen -r restic\" to enter \"screen\" terminal and after that press enter."
+    echo "-bu: Ctrl+A+D will return you back."
+    echo ""
 fi
 
 END_TIME="$(date --rfc-3339=seconds)"
