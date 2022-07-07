@@ -99,11 +99,17 @@
 #                                                                                                  #
 # ================================================================================================ #
 
+# debug enable
+#set -x
+
 # Set script version
-SCRIPT_VERSION="0.2.0"
+SCRIPT_VERSION="0.2.1"
 
 # Set path for restic action "mount"
 MOUNT_POINT="/tmp/restic"
+
+# set path to config
+#CONFIG_PATH="/root/restic/.docker01-env"
 
 # Enable Rest Server: true or false
 ENABLE_REST_SERVER=true
@@ -139,7 +145,7 @@ error_exit() {
     exit 1
 }
 
-ACTION_CMDS="init backup purge list unlock rebuild prune check"
+ACTION_CMDS="init backup purge list unlock rebuild prune check mount stats ls"
 function join_by { local IFS="$1"; shift; echo "$*"; }
 show_help() {
     echo "usage: bu [-c CONFIGURATION-FILE] [OPTIONS] ($(join_by \| $ACTION_CMDS))"
@@ -148,28 +154,38 @@ show_help() {
     echo ""
     echo "Actions:"
     echo ""
-    echo "  init              Initialize (create) the repository."
-    echo "  backup            Backup data to repository."
-    echo "  purge             Apply dereferencing policy ('forget') and prune."
-    echo "  list              List snapshots in repository."
-    echo "  check             Check the repository."
-    echo "  unlock            Unlock a repository in a stale locked state."
-    echo "  rebuild           Rebuild the repository index."
-    echo "  prune             Prune the repository."
-    echo "  mount             Mount the repository to folder ${MOUNT_POINT}."
-    echo "                    The command is redirected to "screen". Run \"screen -r restic\" and press enter."
+    echo "  init                Initialize (create) the repository."
+    echo "  backup              Backup data to repository."
+    echo "  purge               Apply dereferencing policy ('forget') and prune."
+    echo "  list                List snapshots in repository."
+    echo "  check               Check the repository."
+    echo "  unlock              Unlock a repository in a stale locked state."
+    echo "  rebuild             Rebuild the repository index."
+    echo "  prune               Prune the repository."
+    echo "  mount               Mount the repository to folder \"${MOUNT_POINT}\""
+    echo "                      The command is redirected to "screen". Run \"screen -r restic\" and press enter."
+    echo "  stats               Scan the repository and show basic statistics."
+    echo "  ls -id Snapshot-ID  List files in a snapshot. Example: ls -id 22bsg63" 
     echo ""
     echo "Options:"
     echo ""
-    echo "  -h, --help        Show help and exit."
-    echo "  -c, --config      Path to file with configuration environmental"
-    echo "                    variables declared for export. If not specified,"
-    echo "                    then environmental variables must be externally"
-    echo "                    set prior to invoking program."
-    echo "  --ignore-missing  On backup, ignore missing backup paths."
-    echo "  --dry-run         Do not actually do anything: just run through"
-    echo "                    commands."
-    echo "  -v, --version     Show script version and exit."
+    echo "  -h, --help          Show help and exit."
+    echo "  -c, --config        Path to file with configuration environmental"
+    echo "                      variables declared for export. If not specified,"
+    echo "                      then environmental variables must be externally"
+    echo "                      set prior to invoking program."
+    echo "  --ignore-missing    On backup, ignore missing backup paths."
+    echo "  --dry-run           Do not actually do anything: just run through"
+    echo "                      commands."
+    echo "  -v, --version       Show script version and exit."
+    echo ""
+    echo "Example1: ${basename} --config /root/restic/.docker01-env init"
+    echo "Example2: ${basename} --version"
+    echo "Example3: ${basename} --config /root/restic/.docker01-env backup"
+    echo "Example4: ${basename} --config /root/restic/.docker01-env stats"
+    echo "Example5: ${basename} --config /root/restic/.docker01-env ls"
+    echo "Example6: ${basename} --config /root/restic/.docker01-env ls -id ff4eef11 |grep /myfolder"
+    echo ""
 }
 
 # Variables to be read/populated based on command line
@@ -217,6 +233,11 @@ do
             IS_IGNORE_MISSING=1
             shift
             ;;
+        -id|--snapshot-id)
+            shift
+            SNAPSHOT_ID=$1
+            shift
+            ;;  
         -*|--*)
             echo "-bu: Unrecognized option: '$key'"
             echo "-bu: See 'bu --help' for supported 'bu' options."
@@ -332,6 +353,23 @@ do
             shift
             IS_MOUNT=1
             echo "-bu: Will mount repository at: '$RESTIC_REPOSITORY'"
+            ;;
+        stats)
+            shift
+            IS_STATS=1
+            echo "-bu: Will show basic statistics at: '$RESTIC_REPOSITORY'"
+            ;;
+        ls)
+            shift
+            IS_LS=1
+            if [[ -n ${SNAPSHOT_ID} ]]
+            then
+                echo "-bu: Will list files in a snapshot at: '$RESTIC_REPOSITORY'"
+            else 
+                echo "-bu: You have not entered a snapshot ID."
+            #    #echo ""
+                error_exit "'restic list files'" 
+            fi
             ;;
         *)
             echo "-bu: Unrecognized action command: '$POS_ARG'"
@@ -522,8 +560,9 @@ then
 fi
 
 #
-### JH added on 06.07.2022
+### === JH added since 06.07.2022 ===
 #
+#  Restic action: mount
 if [[ ${IS_MOUNT} ]]
 then
     # check screen exists
@@ -567,6 +606,37 @@ then
     echo "-bu: Please run \"screen -r restic\" to enter \"screen\" terminal and after that press enter."
     echo "-bu: Ctrl+A+D will return you back."
     echo ""
+fi
+
+# Restic action: stats
+if [[ $IS_STATS ]]
+then
+    # Scan the repository and show basic statistics.
+    echo "-bu: Scanning starting"
+    $RESTIC_PATH stats &
+    wait $!
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic scan'"
+    fi
+    echo "-bu: Scanning done"
+fi
+
+# Restic action: ls
+if [[ $IS_LS ]]
+then
+    #
+    #SNAPSHOT_ID=$(echo ${*: -1:1})
+    #echo ${SNAPSHOT_ID}
+    # List files in a snapshot.
+    echo "-bu: Listing files starting"
+    $RESTIC_PATH ls ${SNAPSHOT_ID} &
+    wait $!
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic listung files'"
+    fi
+    echo "-bu: Listing files done"
 fi
 
 END_TIME="$(date --rfc-3339=seconds)"
