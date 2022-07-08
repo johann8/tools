@@ -103,7 +103,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.2"
+SCRIPT_VERSION="0.2.3"
 
 # Set path for restic action "mount"
 MOUNT_POINT="/tmp/restic"
@@ -168,8 +168,8 @@ show_help() {
     echo "  unlock              Unlock a repository in a stale locked state."
     echo "  rebuild             Rebuild the repository index."
     echo "  prune               Prune the repository."
-    echo "  mount               Mount the repository to folder \"${MOUNT_POINT}\""
-    echo "                      The command is redirected to "screen". Run \"screen -r restic\" and press enter."
+    echo "  mount               Mount the repository to any folder e.g. \"/tmp/mountPoint\""
+    echo "                      The command line is redirected to linux command \"screen\". Run \"screen -r restic\" and press enter."
     echo "  stats               Scan the repository and show basic statistics."
     echo "  find                Find a file, a directory or restic IDs."
     echo '                      Example: find -n|--name file.conf'
@@ -177,6 +177,9 @@ show_help() {
     echo '                      Example: ls -sid|--snapshot-id 22bsg63' 
     echo "  restore             Extract the data from a snapshot."
     echo '                      Example: restore -sid|--snapshot-id -t|--target /myfolder'
+    echo "  diff                Show differences between two snapshots."
+    echo "                      The quotation marks are necessary!!!"
+    echo "                      Example: diff -d|--difference \"snapshotID_1 snapshotID_2\""
     echo ""
     echo "Options:"
     echo ""
@@ -190,14 +193,16 @@ show_help() {
     echo "                      commands."
     echo "  -v, --version       Show script version and exit."
     echo ""
-    echo "Example1: ${basename} --config /root/restic/.docker01-env init"
-    echo "Example2: ${basename} --version"
-    echo "Example3: ${basename} --help"
-    echo "Example4: ${basename} --config /root/restic/.docker01-env backup"
-    echo "Example5: ${basename} --config /root/restic/.docker01-env stats"
-    echo "Example6: ${basename} --config /root/restic/.docker01-env ls"
-    echo "Example7: ${basename} --config /root/restic/.docker01-env ls -sid ff4eef11 | grep /myfolder"
-    echo "Example8: ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
+    echo "Example1:  ${basename} --config /root/restic/.docker01-env init"
+    echo "Example2:  ${basename} --version"
+    echo "Example3:  ${basename} --help"
+    echo "Example4:  ${basename} --config /root/restic/.docker01-env backup"
+    echo "Example5:  ${basename} --config /root/restic/.docker01-env mount --mountpath \"/pfad/to/mount/point\""
+    echo "Example6:  ${basename} --config /root/restic/.docker01-env stats"
+    echo "Example7:  ${basename} --config /root/restic/.docker01-env ls"
+    echo "Example8:  ${basename} --config /root/restic/.docker01-env ls -sid ff4eef11 | grep /myfolder"
+    echo "Example9:  ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
+    echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"latest f836c4d8\""
     echo ""
     echo "### =======  Examples for restore ======="
     echo "*** Restore any snapshot ID ***"
@@ -231,6 +236,8 @@ IS_DRY_RUN=""
 IS_IGNORE_MISSING=""
 IS_SNAPSHOTS=""
 IS_MOUNT=""
+IS_MOUNT_PATH=""
+MOUNT_PATH=""
 IS_RESTORE=""
 IS_FIND=""
 IS_STATS=""
@@ -244,6 +251,8 @@ IS_PATH=""
 __PATH=""
 IS_NAME=""
 __NAME=""
+SNAPSHOTS_IDS=""
+IS_DIFF=""
 
 # Process command line arguments
 POSITIONAL_ARGS=()
@@ -295,6 +304,12 @@ do
             __NAME=$1
             shift
             ;;
+        -m|-mp|--mountpath)
+            IS_MOUNT_PATH=1
+            shift
+            MOUNT_PATH=$1
+            shift 
+           ;;
         --path)
             IS_PATH=1
             shift
@@ -311,6 +326,11 @@ do
             RESTORE_PATH=$1
             shift
             ;;  
+        -d|--difference)
+            shift
+            SNAPSHOTS_IDS=$1
+            shift
+            ;;
         -*|--*)
             echo "-bu: Unrecognized option: '$key'"
             echo "-bu: See 'bu --help' for supported 'bu' options."
@@ -459,7 +479,12 @@ do
                 error_exit "'restic list files'" 
             fi
             ;;
-        *)
+       diff)
+            shift
+            IS_DIFF=1
+            echo "-bu: Will show differences between two snapshots from repository at: '$RESTIC_REPOSITORY'"
+            ;; 
+       *)
             echo "-bu: Unrecognized action command: '$POS_ARG'"
             echo "-bu: See 'bu --help' for supported 'bu' options."
             exit
@@ -670,20 +695,20 @@ then
         exit 1
     fi
 
-    #
+    # delete old screen sessions and create screen session "restic" in detached mode
     if ! ( screen -ls | grep restic > /dev/null)
     then
         screen -dmS restic
     fi
 
-    #
-    if ! [[ -d ${MOUNT_POINT} ]]
+    # if note exists, then create
+    if ! [[ -d ${MOUNT_PATH} ]]
     then
-        mkdir ${MOUNT_POINT}
+        mkdir -p ${MOUNT_PATH}
     fi
 
     # Run screen named "restic" in detached mode and passes the command to screen terminal
-    screen -S restic -X stuff "source $(echo ${BACKUP_CONFIGURATION_PATH}); restic mount ${MOUNT_POINT}"
+    screen -S restic -X stuff "source $(echo ${BACKUP_CONFIGURATION_PATH}); restic mount ${MOUNT_PATH}"
 
     if [[ $? == 1  ]]
     then
@@ -694,7 +719,8 @@ then
     echo ""
     echo "-bu: Please run \"screen -r restic\" to enter \"screen\" terminal and after that press enter."
     echo "-bu: Ctrl+A+D will return you back."
-    echo ""
+    echo "-bu: Ctrl+A+D will return you back."
+    echo "-bu: You can now browse at: \"${MOUNT_PATH}\""
 fi
 
 # Restic action: restore
@@ -781,7 +807,7 @@ fi
 # Restic action: find
 if [[ $IS_FIND ]]
 then
-    # Scan the repository and show basic statistics.
+    # Find a file, a directory or restic IDs
     echo "-bu: Finding starting"
     $RESTIC_PATH find ${__NAME} &
     wait $!
@@ -791,6 +817,21 @@ then
     fi
     echo "-bu: Finding done"
 fi
+
+# Restic action: diff
+if [[ $IS_DIFF ]]
+then
+    # Show differences between two snapshots
+    echo "-bu: Starting show difference"
+    $RESTIC_PATH diff ${SNAPSHOTS_IDS} &
+    wait $!
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic diff'"
+    fi
+    echo "-bu: Show difference done"
+fi
+
 
 END_TIME="$(date --rfc-3339=seconds)"
 echo "-bu: Exiting normally at: $END_TIME"
