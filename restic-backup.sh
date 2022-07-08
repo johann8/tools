@@ -103,10 +103,13 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.1"
+SCRIPT_VERSION="0.2.2"
 
 # Set path for restic action "mount"
 MOUNT_POINT="/tmp/restic"
+
+# Set path for restic action "restore"
+#RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
 
 # set path to config
 #CONFIG_PATH="/root/restic/.docker01-env"
@@ -116,6 +119,9 @@ ENABLE_REST_SERVER=true
 
 # set Path to restic
 RESTIC_COMMAND="${RESTIC_COMMAND:-/usr/local/bin/restic}"
+
+# script name
+basename="${0##*/}"
 
 # Log start time
 START_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
@@ -145,7 +151,7 @@ error_exit() {
     exit 1
 }
 
-ACTION_CMDS="init backup purge list unlock rebuild prune check mount stats ls"
+ACTION_CMDS="init backup restore purge snapshots unlock rebuild prune check mount stats ls find"
 function join_by { local IFS="$1"; shift; echo "$*"; }
 show_help() {
     echo "usage: bu [-c CONFIGURATION-FILE] [OPTIONS] ($(join_by \| $ACTION_CMDS))"
@@ -157,7 +163,7 @@ show_help() {
     echo "  init                Initialize (create) the repository."
     echo "  backup              Backup data to repository."
     echo "  purge               Apply dereferencing policy ('forget') and prune."
-    echo "  list                List snapshots in repository."
+    echo "  snapshots           List all snapshots in repository."
     echo "  check               Check the repository."
     echo "  unlock              Unlock a repository in a stale locked state."
     echo "  rebuild             Rebuild the repository index."
@@ -165,7 +171,12 @@ show_help() {
     echo "  mount               Mount the repository to folder \"${MOUNT_POINT}\""
     echo "                      The command is redirected to "screen". Run \"screen -r restic\" and press enter."
     echo "  stats               Scan the repository and show basic statistics."
-    echo "  ls -id Snapshot-ID  List files in a snapshot. Example: ls -id 22bsg63" 
+    echo "  find                Find a file, a directory or restic IDs."
+    echo '                      Example: find -n|--name file.conf'
+    echo "  ls                  List files in a snapshot." 
+    echo '                      Example: ls -sid|--snapshot-id 22bsg63' 
+    echo "  restore             Extract the data from a snapshot."
+    echo '                      Example: restore -sid|--snapshot-id -t|--target /myfolder'
     echo ""
     echo "Options:"
     echo ""
@@ -181,10 +192,28 @@ show_help() {
     echo ""
     echo "Example1: ${basename} --config /root/restic/.docker01-env init"
     echo "Example2: ${basename} --version"
-    echo "Example3: ${basename} --config /root/restic/.docker01-env backup"
-    echo "Example4: ${basename} --config /root/restic/.docker01-env stats"
-    echo "Example5: ${basename} --config /root/restic/.docker01-env ls"
-    echo "Example6: ${basename} --config /root/restic/.docker01-env ls -id ff4eef11 |grep /myfolder"
+    echo "Example3: ${basename} --help"
+    echo "Example4: ${basename} --config /root/restic/.docker01-env backup"
+    echo "Example5: ${basename} --config /root/restic/.docker01-env stats"
+    echo "Example6: ${basename} --config /root/restic/.docker01-env ls"
+    echo "Example7: ${basename} --config /root/restic/.docker01-env ls -sid ff4eef11 | grep /myfolder"
+    echo "Example8: ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
+    echo ""
+    echo "### =======  Examples for restore ======="
+    echo "*** Restore any snapshot ID ***"
+    echo "Example1: ${basename} --config /root/restic/.docker01-env restore -sid ff4eef11 --target /path/to/folder"
+    echo ""
+    echo "*** Restore latest snapshot ID ***"
+    echo "Example2: ${basename} --config /root/restic/.docker01-env restore -id latest --target /path/to/folder"
+    echo ""
+    echo "*** Restore only folder \"etc\" or \"/etc\" of any snapshot ***"
+    echo "Example3: ${basename} --config /root/restic/.docker01-env restore -sid ef2cf514 --target /tmp/restore --include \"etc\""
+    echo ""
+    echo "*** Restore all files except for folder \"/etc\" of latest snapshot ***"
+    echo "Example4: ${basename} --config /root/restic/.docker01-env restore -sid latest --target /tmp/restore --exclude \"etc\"" 
+    echo ""
+    echo "*** Restore all files in the path \"/etc\" of latest snapshot ***"
+    echo "Example5: ${basename} --config /root/restic/.docker01-env restore -id latest -t /tmp/restore/ --path /etc"
     echo ""
 }
 
@@ -200,6 +229,21 @@ IS_PRUNE_ONLY=""
 IS_LIST=""
 IS_DRY_RUN=""
 IS_IGNORE_MISSING=""
+IS_SNAPSHOTS=""
+IS_MOUNT=""
+IS_RESTORE=""
+IS_FIND=""
+IS_STATS=""
+IS_INCLUDE=""
+INCLUDE_PATH=""
+IS_EXCLUDE=""
+EXCLUDE_PATH=""
+SNAPSHOT_ID=""
+RESTORE_PATH=""
+IS_PATH=""
+__PATH=""
+IS_NAME=""
+__NAME=""
 
 # Process command line arguments
 POSITIONAL_ARGS=()
@@ -233,9 +277,38 @@ do
             IS_IGNORE_MISSING=1
             shift
             ;;
-        -id|--snapshot-id)
+        -i|--include)
+            IS_INCLUDE=1
+            shift
+            INCLUDE_PATH=$1
+            shift
+            ;;
+        -e|--exclude)
+            IS_EXCLUDE=1
+            shift
+            EXCLUDE_PATH=$1
+            shift
+            ;;
+        -n|--name)
+            IS_NAME=1
+            shift
+            __NAME=$1
+            shift
+            ;;
+        --path)
+            IS_PATH=1
+            shift
+            __PATH=$1
+            shift
+            ;;
+        -id|-sid|--snapshot-id)
             shift
             SNAPSHOT_ID=$1
+            shift
+            ;;
+        -t|--target)
+            shift
+            RESTORE_PATH=$1
             shift
             ;;  
         -*|--*)
@@ -300,7 +373,7 @@ if [[ ! ${ENABLE_REST_SERVER} ]]
 then
     if [[ -z $BACKUP_PATHS ]]
     then
-        echo "-bu: Environmental variable \$BACKUP_PATHS specifying path(s) to back up not defined"
+        echo "-bu: Environmental variable \"$BACKUP_PATHS\" specifying path to back up is not defined"
         exit 1
     fi
 fi
@@ -329,9 +402,9 @@ do
             IS_FORGET_AND_PRUNE=1
             echo "-bu: Will dereference and prune repository at: '$RESTIC_REPOSITORY'"
             ;;
-        list)
+        snapshots)
             shift
-            IS_LIST=1
+            IS_SNAPSHOTS=1
             echo "-bu: Will list snapshots in repository at: '$RESTIC_REPOSITORY'"
             ;;
         rebuild)
@@ -354,20 +427,35 @@ do
             IS_MOUNT=1
             echo "-bu: Will mount repository at: '$RESTIC_REPOSITORY'"
             ;;
-        stats)
+        find)
+            shift
+            IS_FIND=1
+            echo "-bu: Will find a file, a directory or restic IDs from repository at: '$RESTIC_REPOSITORY'"
+            ;;
+        restore)
+            shift
+            IS_RESTORE=1
+            if [[ -n ${RESTORE_PATH} ]]
+            then
+                echo "-bu: Will restore snapshot ID \"${SNAPSHOT_ID}\" from repository at: '$RESTIC_REPOSITORY'"
+            else
+                echo "-bu: You have not entered target."
+                error_exit "'restic restore a snapshot'"
+            fi
+            ;; 
+       stats)
             shift
             IS_STATS=1
-            echo "-bu: Will show basic statistics at: '$RESTIC_REPOSITORY'"
+            echo "-bu: Will show basic statistics from repository at: '$RESTIC_REPOSITORY'"
             ;;
         ls)
             shift
             IS_LS=1
             if [[ -n ${SNAPSHOT_ID} ]]
             then
-                echo "-bu: Will list files in a snapshot at: '$RESTIC_REPOSITORY'"
+                echo "-bu: Will list files in a snapshot from repository at: '$RESTIC_REPOSITORY'"
             else 
                 echo "-bu: You have not entered a snapshot ID."
-            #    #echo ""
                 error_exit "'restic list files'" 
             fi
             ;;
@@ -510,7 +598,7 @@ then
     echo "-bu: Purging done"
 fi
 
-if [[ $IS_LIST ]]
+if [[ $IS_SNAPSHOTS ]]
 then
     $RESTIC_PATH snapshots &
     wait $!
@@ -562,6 +650,7 @@ fi
 #
 ### === JH added since 06.07.2022 ===
 #
+
 #  Restic action: mount
 if [[ ${IS_MOUNT} ]]
 then
@@ -601,11 +690,61 @@ then
         error_exit "'restic mount'"
     fi
 
-    echo "-bu: Mounting done done"
+    echo "-bu: Mounting done"
     echo ""
     echo "-bu: Please run \"screen -r restic\" to enter \"screen\" terminal and after that press enter."
     echo "-bu: Ctrl+A+D will return you back."
     echo ""
+fi
+
+# Restic action: restore
+if [[ ${IS_RESTORE} ]]
+then
+    # Extract the data from a snapshot
+    echo "-bu: Restoring starting"
+
+    if [[ ! -d ${RESTORE_PATH} ]]
+    then
+        echo "-bu: Creating of target \"${RESTORE_PATH}\""
+        mkdir -p ${RESTORE_PATH}
+    fi
+
+    if [[ ${IS_EXCLUDE} ]]
+    then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --verify &
+        wait $!
+        if [[ $? == 1  ]]
+        then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+    elif [[ ${IS_INCLUDE} ]]
+    then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} --verify &
+        wait $!
+        if [[ $? == 1  ]]
+        then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+    elif [[ ${IS_PATH} ]]
+    then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --path ${__PATH} --verify &
+        wait $!
+        if [[ $? == 1  ]]
+        then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+    else 
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --verify &
+        wait $!
+        if [[ $? == 1  ]]
+        then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+    fi
 fi
 
 # Restic action: stats
@@ -637,6 +776,20 @@ then
         error_exit "'restic listung files'"
     fi
     echo "-bu: Listing files done"
+fi
+
+# Restic action: find
+if [[ $IS_FIND ]]
+then
+    # Scan the repository and show basic statistics.
+    echo "-bu: Finding starting"
+    $RESTIC_PATH find ${__NAME} &
+    wait $!
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic find'"
+    fi
+    echo "-bu: Finding done"
 fi
 
 END_TIME="$(date --rfc-3339=seconds)"
