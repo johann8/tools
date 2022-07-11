@@ -99,14 +99,15 @@
 #                                                                                                  #
 # ================================================================================================ #
 
+##############################################################################
+# >>>>>>>>>>>>>>>>>>>>>>> Set or change variables!!! <<<<<<<<<<<<<<<<<<<<<<< #
+##############################################################################
+
 # debug enable
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.3"
-
-# Set path for restic action "mount"
-MOUNT_POINT="/tmp/restic"
+SCRIPT_VERSION="0.2.5"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -119,6 +120,13 @@ ENABLE_REST_SERVER=true
 
 # set Path to restic
 RESTIC_COMMAND="${RESTIC_COMMAND:-/usr/local/bin/restic}"
+
+# set
+RETENTION_POLICY="${RETENTION_POLICY:-"--keep-daily 30 --keep-weekly 24 --keep-monthly 6"}"
+
+##############################################################################
+# >>> Normaly there is no need to change anything below this comment line. ! #
+##############################################################################
 
 # script name
 basename="${0##*/}"
@@ -151,7 +159,7 @@ error_exit() {
     exit 1
 }
 
-ACTION_CMDS="init backup restore purge snapshots unlock rebuild prune check mount stats ls find"
+ACTION_CMDS="init backup restore forget snapshots unlock rebuild prune check mount stats ls find list"
 function join_by { local IFS="$1"; shift; echo "$*"; }
 show_help() {
     echo "usage: bu [-c CONFIGURATION-FILE] [OPTIONS] ($(join_by \| $ACTION_CMDS))"
@@ -160,38 +168,53 @@ show_help() {
     echo ""
     echo "Actions:"
     echo ""
-    echo "  init                Initialize (create) the repository."
-    echo "  backup              Backup data to repository."
-    echo "  purge               Apply dereferencing policy ('forget') and prune."
-    echo "  snapshots           List all snapshots in repository."
-    echo "  check               Check the repository."
-    echo "  unlock              Unlock a repository in a stale locked state."
-    echo "  rebuild             Rebuild the repository index."
-    echo "  prune               Prune the repository."
-    echo "  mount               Mount the repository to any folder e.g. \"/tmp/mountPoint\""
-    echo "                      The command line is redirected to linux command \"screen\". Run \"screen -r restic\" and press enter."
-    echo "  stats               Scan the repository and show basic statistics."
-    echo "  find                Find a file, a directory or restic IDs."
-    echo '                      Example: find -n|--name file.conf'
-    echo "  ls                  List files in a snapshot." 
-    echo '                      Example: ls -sid|--snapshot-id 22bsg63' 
-    echo "  restore             Extract the data from a snapshot."
-    echo '                      Example: restore -sid|--snapshot-id -t|--target /myfolder'
-    echo "  diff                Show differences between two snapshots."
-    echo "                      The quotation marks are necessary!!!"
-    echo "                      Example: diff -d|--difference \"snapshotID_1 snapshotID_2\""
+    echo "  init                     Initialize (create) the repository."
+    echo "  backup                   Backup data to repository."
+    echo "  forget                   Apply dereferencing policy ('forget') and prune."
+    echo "                           The quotes For forget option  must be set."
+    echo "                           Example: forget  -f|--forget-options \"--dry-run"\"
+    echo "  snapshots                List all snapshots in repository."
+    echo "  check                    Check the repository."
+    echo "  unlock                   Unlock a repository in a stale locked state."
+    echo "  rebuild                  Rebuild the repository index."
+    echo "  prune                    Prune the repository."
+    echo "  mount                    Mount the repository to any folder e.g. \"/tmp/mountPoint\""
+    echo "                           The command line is redirected to linux command \"screen\". Run \"screen -r restic\" and press enter."
+    echo "  stats                    Scan the repository and show basic statistics."
+    echo "  find                     Find a file, a directory or restic IDs."
+    echo '                           Example: find -n|--name file.conf'
+    echo "  ls                       List files in a snapshot." 
+    echo '                           Example: ls -sid|--snapshot-id 22bsg63' 
+    echo "  restore                  Extract the data from a snapshot."
+    echo '                           Example: restore -sid|--snapshot-id -t|--target /myfolder'
+    echo "  diff                     Show differences between two snapshots."
+    echo "                           The quotation marks are necessary!!!"
+    echo "                           Example: diff -d|--difference \"snapshotID_1 snapshotID_2\""
+    echo "  list                     List objects in the repository"
+    echo "                           Example: list -l|--list snapshots"
     echo ""
     echo "Options:"
     echo ""
-    echo "  -h, --help          Show help and exit."
-    echo "  -c, --config        Path to file with configuration environmental"
-    echo "                      variables declared for export. If not specified,"
-    echo "                      then environmental variables must be externally"
-    echo "                      set prior to invoking program."
-    echo "  --ignore-missing    On backup, ignore missing backup paths."
-    echo "  --dry-run           Do not actually do anything: just run through"
-    echo "                      commands."
-    echo "  -v, --version       Show script version and exit."
+    echo "  -h, --help               Show help and exit."
+    echo "  -c, --config             Path to file with configuration environmental"
+    echo "                           variables declared for export. If not specified,"
+    echo "                           then environmental variables must be externally"
+    echo "                           set prior to invoking program."
+    echo "  -v, --version            Show script version and exit." 
+    echo "  --ignore-missing         On backup, ignore missing backup paths."
+    echo "  --dry-run                Do not actually do anything: just run through"
+    echo "                           commands."
+    echo "  -i, --include            Include Files or Folder to restore"
+    echo "  -e, --exclude            Exclude Files or Folder from restore"
+    echo "  -n, --name               Name of File or Folder to find in a snapshot"
+    echo "  -m, -mp, --mountpath     Path to mount snapschot"
+    echo "  -p, --path               "
+    echo "  -id, -sid --snapshot-id  The name of snapshot ID"
+    echo "  -t, --target             Path for the restore of snapshot"
+    echo "  -d, --difference         The names of two snapshots that you want to compare. The quotes must be set."
+    echo "  -l, --list               List objects in the repository: [blobs|packs|index|snapshots|keys|locks]"
+    echo "  -f, --forget-options     Add forget additional options"
+    echo ""
     echo ""
     echo "Example1:  ${basename} --config /root/restic/.docker01-env init"
     echo "Example2:  ${basename} --version"
@@ -203,6 +226,10 @@ show_help() {
     echo "Example8:  ${basename} --config /root/restic/.docker01-env ls -sid ff4eef11 | grep /myfolder"
     echo "Example9:  ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
     echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"latest f836c4d8\""
+    echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
+    echo "Example12: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' '"\"
+    echo "Example13: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run"\"
+    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' ' -dry-run"\"
     echo ""
     echo "### =======  Examples for restore ======="
     echo "*** Restore any snapshot ID ***"
@@ -253,6 +280,11 @@ IS_NAME=""
 __NAME=""
 SNAPSHOTS_IDS=""
 IS_DIFF=""
+IS_LIST=""
+IS_INDEX=""
+INDEX_FLAG=""
+IS_FORGET=""
+FORGET_OPTIONS=""
 
 # Process command line arguments
 POSITIONAL_ARGS=()
@@ -331,6 +363,18 @@ do
             SNAPSHOTS_IDS=$1
             shift
             ;;
+        -l|--list)
+            IS_INDEX=1
+            shift
+            INDEX_FLAG=$1
+            shift
+           ;;
+        -f|--forget-options)
+            IS_FORGET=1
+            shift
+            FORGET_OPTIONS=$1
+            shift
+           ;;
         -*|--*)
             echo "-bu: Unrecognized option: '$key'"
             echo "-bu: See 'bu --help' for supported 'bu' options."
@@ -417,7 +461,7 @@ do
             IS_BACKUP=1
             echo "-bu: Will back up to repository at: '$RESTIC_REPOSITORY'"
             ;;
-        purge)
+        forget)
             shift
             IS_FORGET_AND_PRUNE=1
             echo "-bu: Will dereference and prune repository at: '$RESTIC_REPOSITORY'"
@@ -484,6 +528,11 @@ do
             IS_DIFF=1
             echo "-bu: Will show differences between two snapshots from repository at: '$RESTIC_REPOSITORY'"
             ;; 
+       list)
+            shift
+            IS_LIST=1
+            echo "-bu: Will list objects in the repository at: '$RESTIC_REPOSITORY'"
+            ;;
        *)
             echo "-bu: Unrecognized action command: '$POS_ARG'"
             echo "-bu: See 'bu --help' for supported 'bu' options."
@@ -605,15 +654,15 @@ fi
 
 if [[ $IS_FORGET_AND_PRUNE ]]
 then
-    if [[ -z $RETENTION_POLICY ]]
-    then
-        RETENTION_POLICY="--keep-daily 14 --keep-weekly 16 --keep-monthly 18 --keep-yearly 3"
-    fi
+    #if [[ -z $RETENTION_POLICY ]]
+    #then
+    #    RETENTION_POLICY="--keep-daily 14 --keep-weekly 16 --keep-monthly 18 --keep-yearly 3"
+    #fi
     echo "-bu: Dereferencing starting"
     echo "-bu: Retention policy: '$RETENTION_POLICY'"
     $RESTIC_PATH forget     \
-        --prune             \
         $RETENTION_POLICY   \
+        ${FORGET_OPTIONS}   \
         &
     wait $!
     if [[ $? == 1 ]]
@@ -830,6 +879,20 @@ then
         error_exit "'restic diff'"
     fi
     echo "-bu: Show difference done"
+fi
+
+# Restic action: list
+if [[ $IS_LIST ]]
+then
+    # List objects in the repository: [blobs|packs|index|snapshots|keys|locks]
+    echo "-bu: Starting list objects"
+    $RESTIC_PATH list ${INDEX_FLAG} &
+    wait $!
+    if [[ $? == 1  ]]
+    then
+        error_exit "'restic list'"
+    fi
+    echo "-bu: List object \"${INDEX_FLAG}\" done"
 fi
 
 
