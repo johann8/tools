@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.5"
+SCRIPT_VERSION="0.2.6"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -119,7 +119,7 @@ SCRIPT_VERSION="0.2.5"
 ENABLE_REST_SERVER=true
 
 # set Path to restic
-RESTIC_COMMAND="${RESTIC_COMMAND:-/usr/local/bin/restic}"
+RESTIC_PATH="${RESTIC_PATH:-/usr/local/bin/restic}"
 
 # set
 RETENTION_POLICY="${RETENTION_POLICY:-"--keep-daily 30 --keep-weekly 24 --keep-monthly 6"}"
@@ -227,9 +227,10 @@ show_help() {
     echo "Example9:  ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
     echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"latest f836c4d8\""
     echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
-    echo "Example12: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' '"\"
-    echo "Example13: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run"\"
-    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' ' -dry-run"\"
+    #echo "Example12: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' '"\"
+    echo "Example13: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
+    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
+    echo "Example15: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
     echo ""
     echo "### =======  Examples for restore ======="
     echo "*** Restore any snapshot ID ***"
@@ -394,9 +395,9 @@ then
     RESTIC_PATH="echo restic"
     echo "-bu: Running in dry run mode"
 else
-    RESTIC_PATH=restic
+    # RESTIC_PATH=restic
     # RESTIC_PATH="echo restic"
-    echo "-bu: restic path is: '$RESTIC_PATH'"
+    echo "-bu: restic path is: $RESTIC_PATH"
 fi
 
 # Expect to get an action command as a positional argument.
@@ -593,6 +594,7 @@ then
         echo "-bu: Paths to be included: "
         echo -e `cat $BACKUP_INCLUDES`
         echo "-bu: Paths to be excluded: $BACKUP_EXCLUDES"
+        echo -e `cat $BACKUP_EXCLUDES`
         $RESTIC_PATH backup \
             --one-file-system \
             --exclude-caches \
