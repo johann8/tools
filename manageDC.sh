@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.3.0"                  # Set script version
+SCRIPT_VERSION="0.3.1"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -390,7 +390,11 @@ update_dc() {
       echo " "
       echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
       print_basename "Update from docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is started..."
-      #cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
+      
+      # dc pull other images of microservice
+      cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
+      ${COMMAND} pull
+
       stop_dc
       print_foot
       start_dc
