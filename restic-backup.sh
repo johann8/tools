@@ -389,7 +389,7 @@ do
 done
 # set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-# show output of script version
+# print output of script version
 echo "-bu: Script version is: ${SCRIPT_VERSION}"
 
 # Path to restic
