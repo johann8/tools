@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.6"
+SCRIPT_VERSION="0.2.7"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -134,6 +134,7 @@ basename="${0##*/}"
 # Log start time
 START_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
 echo "-bu: Starting on ${HOSTNAME} at: $START_TIME"
+echo "-bu: Script version is: ${SCRIPT_VERSION}"
 
 # Exit on failure, pipe failure
 # set -e -o pipefail
