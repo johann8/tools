@@ -134,7 +134,6 @@ basename="${0##*/}"
 # Log start time
 START_TIME="$(date +"%Y-%m-%d %H:%M:%S")"
 echo "-bu: Starting on ${HOSTNAME} at: $START_TIME"
-echo "-bu: Script version is: ${SCRIPT_VERSION}"
 
 # Exit on failure, pipe failure
 # set -e -o pipefail
@@ -389,6 +388,9 @@ do
     esac
 done
 # set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+# show output of script versin
+echo "-bu: Script version is: ${SCRIPT_VERSION}"
 
 # Path to restic
 if [[ $IS_DRY_RUN ]]
