@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# For Debug
+#set -x
+
 ##############################################################################
 # Script-Name : mysqldump_backup_full.sh                                     #
 # Description : Script to backup the --all-databases of a MySQL/MariaDB.     #
@@ -37,7 +40,7 @@
 #                                H I S T O R Y                               #
 ##############################################################################
 # -------------------------------------------------------------------------- #
-# Version     : 1.01                                                         #
+# Version     : 1.02                                                         #
 # Description : Changed script flow                                          #
 # -------------------------------------------------------------------------- #
 ##############################################################################
@@ -49,10 +52,10 @@
 SCRIPT_NAME='mysqldump_backup_schema'
  
 # CUSTOM - Backup-Files.
-DIR_BACKUP='/srv/backup/mysqldump_backup_schema'
+DIR_BACKUP='/var/backup/mysqldump_backup_schema'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
-BACKUPFILES_DELETE=77
+BACKUPFILES_DELETE=30
  
 # CUSTOM - mysqldump Parameter.
 DUMP_HOST='127.0.0.1'
@@ -61,13 +64,13 @@ DUMP_PASS='geheim'
 # CUSTOM - Binary-Logging active. Example: ('Y'(my.cnf|log_bin=bin-log), 'N')
 DUMP_BIN_LOG_ACTIVE='N'
 # CUSTOM - Depends on the database engine. Example: ('Y'(MyISAM), 'N'(InnoDB))
-DUMP_LOCK_ALL_TABLE='Y'
+DUMP_LOCK_ALL_TABLE='N'
  
 # CUSTOM - Mail-Recipient.
 MAIL_RECIPIENT='you@example.com'
  
 # CUSTOM - Status-Mail [Y|N].
-MAIL_STATUS='N'
+MAIL_STATUS='Y'
  
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -80,7 +83,7 @@ SED_COMMAND=`command -v sed`
 TAR_COMMAND=`command -v tar`
 TOUCH_COMMAND=`command -v touch`
 RM_COMMAND=`command -v rm`
-PROG_SENDMAIL=`command -v sendmail`
+PROG_SENDMAIL='/sbin/sendmail'
 CAT_COMMAND=`command -v cat`
 DATE_COMMAND=`command -v date`
 MKDIR_COMMAND=`command -v mkdir`
@@ -301,11 +304,11 @@ fi
 for DB in $($MYSQL_COMMAND --user=$DUMP_USER --password=$DUMP_PASS --execute='show databases \G' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
         if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
                 log "Dump data with bin-log data ..."
-                log "$DB-$FILE_BACKUP"
+                log "File: $DB-$FILE_BACKUP"
                 $MYSQLDUMP_COMMAND --host=$DUMP_HOST --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --master-data=1 --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
         else
                 log "Dump data ..."
-                log "$DB-$FILE_BACKUP"
+                log "File: $DB-$FILE_BACKUP"
                 $MYSQLDUMP_COMMAND --host=$DUMP_HOST --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
         fi
  
@@ -315,13 +318,32 @@ for DB in $($MYSQL_COMMAND --user=$DUMP_USER --password=$DUMP_PASS --execute='sh
  
         log ""
         log "Delete archive files ..."
-        (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
-        if [ "$?" != "0" ]; then
-                log "Delete old archive files $DIR_BACKUP .....[FAILED]"
+
+        #(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+        #if [ "$?" != "0" ]; then
+        #        log "Delete old archive files $DIR_BACKUP .....[FAILED]"
+        #else
+        #        log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+        #fi
+
+        ### ======= Added J. Hahn ========
+        #   ----------- Start ------------
+        COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+        if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
+            log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+            log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
         else
+            (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+            if [ "$?" != "0" ]; then
+                log "Delete old archive files $DIR_BACKUP .....[FAILED]"
+            else
+                COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+                log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
                 log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+            fi
         fi
- 
+        #   ------------ End ---------- 
+
         log ""
         log "Delete dumpfile ..."
         $RM_COMMAND $DB-$FILE_BACKUP
@@ -358,3 +380,6 @@ fi
 movelog
  
 exit 0
+
+# ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+# cd  /var/backup/mysqldump_backup_schema/ && (ls *.tar.gz -t |head -n 225; ls *.tar.gz) |sort |uniq -u
