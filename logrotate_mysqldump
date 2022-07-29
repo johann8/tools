@@ -1,0 +1,9 @@
+# Logrotate
+### Put this file into folder: /etc/logrotate.d/
+#
+/var/log/mysqldump_backup_full.log /var/log/mysqldump_backup_schema.log {
+    weekly
+    missingok
+    rotate 4
+    compress
+}

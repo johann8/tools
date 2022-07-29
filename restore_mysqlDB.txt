@@ -1,0 +1,14 @@
+#
+### Restore MySQL DB
+#
+
+mkdir /tmp/recovery
+tar -xvzf /path/to/backup/folder/mysqldump_backup_20220524_184224.sql.tar.gz -C /tmp/recovery --atime-preserve --preserve-permissions
+
+# restore full dump
+# IMPORTANT - Knowledge of the root password of the database is required !!!!
+/usr/bin/mysql -u root -p < /tmp/recovery/mysqldump_backup_20220524_184224.sql
+
+# restore schema dump
+# IMPORTANT - Knowledge of the root password of the database is required !!!!
+/usr/bin/mysql -u root -p < /tmp/recovery/phpmyadmin-mysqldump_backup_20220207_033209.sql
