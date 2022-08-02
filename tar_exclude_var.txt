@@ -1,0 +1,6 @@
+backup
+cache/apt
+lock
+lost+found
+run
+tmp
