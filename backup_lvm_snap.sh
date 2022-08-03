@@ -68,7 +68,7 @@ BACKUPFILES_DELETE=6                                         # Number of backup 
 # >>> Normaly there is no need to change anything below this comment line. ! #
 ##############################################################################
 
-echo " " >> ${LOGFILE}
+#echo " " >> ${LOGFILE}
 echo "Datum: $(date +%Y-%m-%d %Hh %M)"
 echo "================================" >> ${LOGFILE}
 echo "$(hostname -f)" >>  ${LOGFILE}
@@ -167,6 +167,7 @@ else
    echo "No old files were found." >>  ${LOGFILE}
 fi
 
+echo "--------------------------------" ${LOGFILE}
 echo " " >>  ${LOGFILE}
 exit ${RES}
 
