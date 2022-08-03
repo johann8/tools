@@ -54,9 +54,9 @@ VOLGROUP=deb_3cx                                             # name of the volum
 ORIGVOL=var                                                  # name of the logical volume to backup
 SNAPVOL=var_snap                                             # name of the snapshot to create
 SNAPSIZE=5G                                                  # space to allocate for the snapshot in the volume group
-BACKUPDIR="/var/backup/container/$(date +%Y-%m-%d)"          # where to put the backup
-TIMESTAMP="$(date +%Y%m%d-%Hh%M)"
-_DATUM="$(date +%Y-%m-%d %Hh %M)"
+BACKUPDIR="/var/backup/container/$(date '+%Y-%m-%d')"          # where to put the backup
+TIMESTAMP="$(date '+%Y%m%d-%Hh%M')"
+_DATUM="$(date '+%Y-%m-%d %Hh:%Ms')"
 BACKUPNAME="${ORIGVOL}_${TIMESTAMP}.tgz"                     # name of the archive
 TAR_EXCLUDE_VAR="--exclude-from=$(pwd)/tar_exclude_var.txt"  # Files to be excluded from tar archive
 MOUNTDIR="/mnt/lvm_snap"
