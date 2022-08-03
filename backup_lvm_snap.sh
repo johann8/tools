@@ -11,12 +11,16 @@
 #               On error while execution, a LOG file and a error message     #
 #               will be send by e-mail.                                      #
 #                                                                            #
-# Last update : 02.08.2022                                                   #
-# Version     : 1.00                                                         #
+# Created     : 02.08.2022                                                   #
+# Last update : 03.08.2022                                                   #
+# Version     : 1.01                                                         #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermannkabeltechnik.de>              #
 # DokuWiki    : https://docu.int.wassermanngruppe.de                         #
 # Homepage    : https://wassermanngruppe.de                                  #
+# GitHub      : https://github.com/johann8/tools                             #
+# Download    : https://raw.githubusercontent.com/johann8/tools/master/ \    #
+#               backup_lvm_snap.sh                                           #
 #                                                                            #
 #  +----------------------------------------------------------------------+  #
 #  | This program is free software; you can redistribute it and/or modify |  #
@@ -33,8 +37,8 @@
 #                                H I S T O R Y                               #
 ##############################################################################
 # -------------------------------------------------------------------------- #
-# Version     : x.xx                                                         #
-# Description : <Description>                                                #
+# Version     : 1.01                                                         #
+# Description : Changed var area                                             #
 # -------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------- #
 # Version     : x.xx                                                         #
@@ -46,18 +50,18 @@
 # >>> Please edit following lines for personal settings and custom usages. ! #
 ##############################################################################
 
-VOLGROUP=deb_3cx                                      # name of the volume group
-ORIGVOL=var                                           # name of the logical volume to backup
-SNAPVOL=var_snap                                      # name of the snapshot to create
-SNAPSIZE=5G                                           # space to allocate for the snapshot in the volume group
-BACKUPDIR="/var/backup/container/$(date +%Y-%m-%d)"   # where to put the backup
+VOLGROUP=deb_3cx                                             # name of the volume group
+ORIGVOL=var                                                  # name of the logical volume to backup
+SNAPVOL=var_snap                                             # name of the snapshot to create
+SNAPSIZE=5G                                                  # space to allocate for the snapshot in the volume group
+BACKUPDIR="/var/backup/container/$(date +%Y-%m-%d)"          # where to put the backup
 TIMESTAMP="$(date +%Y%m%d-%Hh%M)"
-BACKUPNAME="var_${TIMESTAMP}.tgz"                     # name of the archive
-TAR_EXCLUDE_VAR="/usr/local/bin/tar_exclude_var.txt"  # Files to be excluded from tar archive
+BACKUPNAME="${ORIGVOL}_${TIMESTAMP}.tgz"                     # name of the archive
+TAR_EXCLUDE_VAR="--exclude-from=$(pwd)/tar_exclude_var.txt"  # Files to be excluded from tar archive
 MOUNTDIR="/mnt/lvm_snap"
 SEARCHDIR="/var/backup/container"
 LOGFILE="/var/log/container_backup.log"
-BACKUPFILES_DELETE=6                                  # Number of backup files 
+BACKUPFILES_DELETE=6                                         # Number of backup files 
 
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -68,7 +72,7 @@ echo "Datum: $(date +%Y-%m-%d %Hh %M)"
 echo "================================" >> ${LOGFILE}
 echo "$(hostname -f)" >>  ${LOGFILE}
 echo "================================" >>  ${LOGFILE}
-echo "$(date +%Y-%m-%d %Hh %M)" >>  ${LOGFILE}
+echo "Started at: $(date +%Y-%m-%d %Hh %M)" >>  ${LOGFILE}
 echo " " >>  ${LOGFILE}
 
 # only run as root
@@ -119,12 +123,12 @@ fi
 # main command of the script that does the real stuff
 echo "creating backup dir: ${BACKUPDIR}..." >>  ${LOGFILE}
 mkdir -p ${BACKUPDIR}
-if tar --exclude-from=${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${ORIGVOL}
+if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${ORIGVOL}
 then
         md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
         RES=0
 else
-        echo "TAR failed" >>  ${LOGFILE}
+        echo "Error: Create TAR archive failed." >>  ${LOGFILE}
         RES=1
 
 ##      exit (1);  # don't remove the snapshot just yet
