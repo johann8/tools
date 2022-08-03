@@ -99,33 +99,35 @@ fi
 
 # check that the mount point does not already exist, mount snapshot
 if ! [ -d ${MOUNTDIR}/${ORIGVOL} ]; then
-   echo "creating mount point..." >>  ${LOGFILE}
+   echo "creating mount point... ${MOUNTDIR}/${ORIGVOL}" >>  ${LOGFILE}
    mkdir -p ${MOUNTDIR}/${ORIGVOL}
 
    # mount snapshot
+   echo "mounting LVM snapshot... /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
    mount /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
    RES=$?
 
    if [ "$RES" != '0']; then
-      echo "cannot mount snapshot" >>  ${LOGFILE}
+      echo "cannot mount snapshot: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
       exit 1
    fi
 else
-   echo "mount point exists" >>  ${LOGFILE}
+   echo "mount point exists: ${MOUNTDIR}/${ORIGVOL}" >>  ${LOGFILE}
    mount /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
    RES=$?
 
    if [ "$RES" != '0' ]; then
-      echo "cannot mount snapshot" >>  ${LOGFILE}
+      echo "cannot mount snapshot: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
       exit 1
    fi
 fi
 
 # main command of the script that does the real stuff
-echo "creating backup dir: ${BACKUPDIR}..." >>  ${LOGFILE}
+echo "creating backup dir... ${BACKUPDIR}" >>  ${LOGFILE}
 mkdir -p ${BACKUPDIR}
 if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${ORIGVOL}
 then
+        echo "Created TAR archive: ${BACKUPDIR}/${BACKUPNAME}" >>  ${LOGFILE}
         md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
         RES=0
 else
@@ -144,10 +146,10 @@ then
   # remove snapshot
   if ! /usr/sbin/lvremove -f /dev/${VOLGROUP}/${SNAPVOL} >/dev/null 2>&1
   then
-        echo "cannot remove the lvm snapshot" >>  ${LOGFILE}
+        echo "cannot remove the lvm snapshot: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
         RES=1
   else
-        echo "lvm snapshot removed" >>  ${LOGFILE}
+        echo "lvm snapshot removed: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
         RES=0
   fi
 
