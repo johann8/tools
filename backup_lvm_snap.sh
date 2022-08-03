@@ -167,7 +167,7 @@ else
    echo "No old files were found." >>  ${LOGFILE}
 fi
 
-echo "--------------------------------" ${LOGFILE}
+echo "--------------------------------" >> ${LOGFILE}
 echo " " >>  ${LOGFILE}
 exit ${RES}
 
