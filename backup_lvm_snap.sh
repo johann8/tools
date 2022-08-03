@@ -56,6 +56,7 @@ SNAPVOL=var_snap                                             # name of the snaps
 SNAPSIZE=5G                                                  # space to allocate for the snapshot in the volume group
 BACKUPDIR="/var/backup/container/$(date +%Y-%m-%d)"          # where to put the backup
 TIMESTAMP="$(date +%Y%m%d-%Hh%M)"
+_DATUM=$(date +%Y-%m-%d %Hh %M)"
 BACKUPNAME="${ORIGVOL}_${TIMESTAMP}.tgz"                     # name of the archive
 TAR_EXCLUDE_VAR="--exclude-from=$(pwd)/tar_exclude_var.txt"  # Files to be excluded from tar archive
 MOUNTDIR="/mnt/lvm_snap"
@@ -72,7 +73,7 @@ echo "Datum: $(date +%Y-%m-%d %Hh %M)"
 echo "================================" >> ${LOGFILE}
 echo "$(hostname -f)" >>  ${LOGFILE}
 echo "================================" >>  ${LOGFILE}
-echo "Started at: $(date +%Y-%m-%d %Hh %M)" >>  ${LOGFILE}
+echo "Started at: ${_DATUM}" >>  ${LOGFILE}
 echo " " >>  ${LOGFILE}
 
 # only run as root
