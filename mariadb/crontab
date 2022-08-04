@@ -1,0 +1,7 @@
+#
+### Run `crontab -e` and put lines below
+#
+ 
+# Backup mariadb mysqldump
+5 03 * * * root /usr/local/bin/mysqldump_backup_full.sh > /dev/null 2>&1
+5 04 * * * root /usr/local/bin/mysqldump_backup_schema.sh > /dev/null 2>&1
