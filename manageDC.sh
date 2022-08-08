@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.3.1"                  # Set script version
+SCRIPT_VERSION="0.3.2"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -336,6 +336,42 @@ stop_dc_all() {
    ${COMMAND} ps
    print_foot
 }
+
+# Function status container: running | stoped 
+status_dms() {
+   # check, if update.sh exists
+   if [[ -f ${CONTAINER_SAVE_PATH}/$1/update.sh ]]
+   then
+      # read docker container image from update.sh
+      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/$1/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
+      CONTAINER_NAME_RES=1
+   else
+      # read docker container image from docker-compose.yml
+      ar_cn=($(cat ${CONTAINER_SAVE_PATH}/$1/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //'))
+
+      # check: var CONTAINER_NAME is empty or not
+      if [[ ${ar_cn[*]} =~ $(echo "\<$1\>") ]]
+      then
+          CONTAINER_NAME=$1
+          CONTAINER_NAME_RES=1
+      else
+          print_basename "ERROR: Docker container name ${cyanf}\"$1\"${reset} does not exist!"
+          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/$1/update.sh\"${reset}"
+          exit 0
+      fi
+   fi
+
+   # status container: running | stoped
+   if [[ ${CONTAINER_NAME_RES} == 1 ]]
+   then
+      _STATUS_DMS=
+      #_STATUS_DMS=$(cd ${CONTAINER_SAVE_PATH}/$1; ${COMMAND} ps ${CONTAINER_NAME} | grep  ${CONTAINER_NAME} |awk -F ' ' '{print $4}')
+      _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
+   else
+      print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
+   fi
+}
+
 
 # Function update docker container
 # Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
@@ -957,7 +993,15 @@ then
     print_kopf
 
     for i in ${ar[*]}; do
-       echo "Docker microservice:${cyanf} $i ${reset}"
+       arg=
+       arg=$i
+       status_dms "$arg"
+       if [[ ${_STATUS_DMS} = running ]]
+       then
+          echo "Docker microservice:${cyanf} $i${reset} - ${bluef}${_STATUS_DMS}${reset}"
+       else 
+          echo "Docker microservice:${cyanf} $i${reset} - ${redf}${_STATUS_DMS}${reset}"
+       fi
     done
 
     if [[ $? -ne 0 ]]
