@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.3.2"                  # Set script version
+SCRIPT_VERSION="0.3.3"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -361,12 +361,25 @@ status_dms() {
       fi
    fi
 
-   # status container: running | stoped
+   # status container: running | exited |not running
    if [[ ${CONTAINER_NAME_RES} == 1 ]]
    then
-      _STATUS_DMS=
-      #_STATUS_DMS=$(cd ${CONTAINER_SAVE_PATH}/$1; ${COMMAND} ps ${CONTAINER_NAME} | grep  ${CONTAINER_NAME} |awk -F ' ' '{print $4}')
-      _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
+      # check, if container is running or not
+      COUNT_CID=$(docker ps -a | grep "$CONTAINER_NAME" | wc -l)
+      if [[ ${COUNT_CID} -gt 0 ]]
+      then
+         _RES=0
+      else
+         _RES=1
+      fi
+
+      if [[ ${_RES} == 0 ]]
+      then
+         _STATUS_DMS=
+        _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
+      else
+         _STATUS_DMS="not running"
+      fi
    else
       print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
    fi
@@ -986,6 +999,9 @@ then
 fi
 
 # List all docker container
+# format="%8s%10s%10s%14s\n"
+#printf "$format" "Dirs" "Files" "Blocks" "Directory"
+
 if [[ ${IS_LIST} ]]
 then
     #print_basename "All docker container are being listed..."
@@ -998,9 +1014,11 @@ then
        status_dms "$arg"
        if [[ ${_STATUS_DMS} = running ]]
        then
-          echo "Docker microservice:${cyanf} $i${reset} - ${bluef}${_STATUS_DMS}${reset}"
+          #echo "Docker microservice:${cyanf} $i${reset} - ${bluef}${_STATUS_DMS}${reset}"
+          printf "%-20s %-12s\t %5s %-10s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${bluef}${_STATUS_DMS}${reset}"
        else 
-          echo "Docker microservice:${cyanf} $i${reset} - ${redf}${_STATUS_DMS}${reset}"
+          #echo "Docker microservice:${cyanf} $i${reset} - ${redf}${_STATUS_DMS}${reset}"
+          printf "%-20s %-12s\t %5s %-10s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${redf}${_STATUS_DMS}${reset}"
        fi
     done
 
