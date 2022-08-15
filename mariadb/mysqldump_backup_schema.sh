@@ -43,22 +43,30 @@
 # Version     : 1.02                                                         #
 # Description : Changed script flow                                          #
 # -------------------------------------------------------------------------- #
+#                                                                            #
+# -------------------------------------------------------------------------- #
+# Version     : 1.03                                                         #
+# Description : Add variable MYSQL_PORT; Changed Command: mysqldump          #
+# -------------------------------------------------------------------------- #
 ##############################################################################
 
 ##############################################################################
 # >>> Please edit following lines for personal settings and custom usages. ! #
 ##############################################################################
 
+# CUSTOM - Script-Name
 SCRIPT_NAME='mysqldump_backup_schema'
+_HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
-DIR_BACKUP='/var/backup/mysqldump_backup_schema'
+DIR_BACKUP='/var/backup/'${_HOST}'/mysqldump_backup_schema'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
 BACKUPFILES_DELETE=30
  
 # CUSTOM - mysqldump Parameter.
 DUMP_HOST='127.0.0.1'
+MYSQL_PORT='3306'
 DUMP_USER='root'
 DUMP_PASS='geheim'
 # CUSTOM - Binary-Logging active. Example: ('Y'(my.cnf|log_bin=bin-log), 'N')
@@ -301,15 +309,15 @@ else
         DUMP_LOCK_ALL_TABLE='--single-transaction'
 fi
  
-for DB in $($MYSQL_COMMAND --user=$DUMP_USER --password=$DUMP_PASS --execute='show databases \G' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
+for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --execute='show databases \G' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
         if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
                 log "Dump data with bin-log data ..."
                 log "File: $DB-$FILE_BACKUP"
-                $MYSQLDUMP_COMMAND --host=$DUMP_HOST --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --master-data=1 --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
+                $MYSQLDUMP_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --master-data=1 --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
         else
                 log "Dump data ..."
                 log "File: $DB-$FILE_BACKUP"
-                $MYSQLDUMP_COMMAND --host=$DUMP_HOST --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
+                $MYSQLDUMP_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
         fi
  
         log ""
@@ -381,5 +389,43 @@ movelog
  
 exit 0
 
+#
+### === Install script ===
+#
+wget https://raw.githubusercontent.com/johann8/tools/master/mariadb/mysqldump_backup_full.sh
+wget https://raw.githubusercontent.com/johann8/tools/master/mariadb/mysqldump_backup_schema.sh
+vi /usr/local/bin/mysqldump_backup_schema.sh
+chmod 0700 /usr/local/bin/mysqldump_backup_schema.sh
+tail -f -n2000 /var/log/mysqldump_backup_schema.log
+
+#
+### === Install crontab ===
+#
+crontab -e
+# Backup mariadb mysqldump
+05  4  *  *  *  /usr/local/bin/mysqldump_backup_full.sh > /dev/null 2>&1
+15  4  *  *  *  /usr/local/bin/mysqldump_backup_schema.sh > /dev/null 2>&1
+
+#
+### === Recovery ===
+#
+mkdir /tmp/recovery
+tar -xvzf /var/backup/centos7/mysqldump_backup_schema/kimai-mysqldump_backup_20210908_211509.sql.tar.gz -C /tmp/recovery --atime-preserve --preserve-permissions
+/usr/bin/mysql -u root -p < /tmp/recovery/kimai-mysqldump_backup_20210908_211509.sql
+
+#
+### === Logrotate ===
+#
+vim /etc/logrotate.d/mysqldump
+-------------
+ /var/log/mysqldump_backup_full.log /var/log/mysqldump_backup_schema.log {
+    weekly
+    missingok
+    rotate 4
+    compress
+}
+----------------
+
 # ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 # cd  /var/backup/mysqldump_backup_schema/ && (ls *.tar.gz -t |head -n 225; ls *.tar.gz) |sort |uniq -u
+
