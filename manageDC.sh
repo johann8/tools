@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.3.3"                  # Set script version
+SCRIPT_VERSION="0.3.4"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 # Shared DB between containers
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
@@ -35,7 +35,7 @@ DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
 DEFAULT_CONTAINER_SAVE_PATH="/opt"
 if [[ -f ${DOCKER_COMPOSE_PATH}/docker-compose ]]
 then
-    FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
+    FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
     CONTAINER_SAVE_PATH=${FIND_CONTAINER_SAVE_PATH}
     #CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
 else
@@ -73,18 +73,18 @@ error_exit() {
 # Function print kopf
 print_kopf() {
     #echo ""
-    echo "${greenf}=====================================================${reset}"
+    echo "${greenf}======================================================${reset}"
 }
 
 # Function print foot
 print_foot() {
-   echo "${greenf}-----------------------------------------------------${reset}"
+   echo "${greenf}------------------------------------------------------${reset}"
    echo ""
 }
 
 # Function print end
  print_end() {
-   echo "${greenf}************************************************************${reset}"
+   echo "${greenf}*************************************************************${reset}"
    echo ""
 }
 
@@ -215,17 +215,6 @@ start_dc() {
       ${COMMAND} ps
    fi
 }
-#start_dc() {
-#    # start
-#    print_basename "Docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
-#    print_kopf
-#    cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
-#    echo "RUN: ${COMMAND} up -d"
-#    ${COMMAND} up -d
-#    echo "" && sleep 5
-#    echo "RUN: ${COMMAND} ps"
-#    ${COMMAND} ps
-#}
 
 # Function stop docker container
 stop_dc() {
@@ -650,7 +639,7 @@ do
         -n|--name)
             IS_NAME=1
             shift
-            DOCKER_MICROSERVICE_NAME=$1
+            DOCKER_MICROSERVICE_NAME="$1"
             if [[ ${IS_NAME} ]]; then
                 if [[ ${DOCKER_MICROSERVICE_NAME} =~ (stop|start|restart|update|list|status|logs) ]]; then
                     print_basename "Error: The entered name of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exists."
@@ -1001,7 +990,7 @@ fi
 # List all docker container
 # format="%8s%10s%10s%14s\n"
 #printf "$format" "Dirs" "Files" "Blocks" "Directory"
-
+#  printf "%-20s %-27s\t %1s %-5s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${bluef}${_STATUS_DMS}${reset}"
 if [[ ${IS_LIST} ]]
 then
     #print_basename "All docker container are being listed..."
@@ -1015,10 +1004,10 @@ then
        if [[ ${_STATUS_DMS} = running ]]
        then
           #echo "Docker microservice:${cyanf} $i${reset} - ${bluef}${_STATUS_DMS}${reset}"
-          printf "%-20s %-12s\t %5s %-10s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${bluef}${_STATUS_DMS}${reset}"
+          printf "%-20s %-27s %1s %-5s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${bluef}${_STATUS_DMS}${reset}"
        else 
           #echo "Docker microservice:${cyanf} $i${reset} - ${redf}${_STATUS_DMS}${reset}"
-          printf "%-20s %-12s\t %5s %-10s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${redf}${_STATUS_DMS}${reset}"
+          printf "%-20s %-27s %1s %-5s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${redf}${_STATUS_DMS}${reset}"
        fi
     done
 
