@@ -13,7 +13,7 @@ STORAGE="/var/backup/container"
 FILE_DELETE="*.tar.gz"
 BACKUPFILES_DELETE=20
 ARRAY=($(ls ${STORAGE}))
-SCRIPT_VERSION="0.1"                       # Set script version
+SCRIPT_VERSION="0.2"                       # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")     # time stamp
 
 #
