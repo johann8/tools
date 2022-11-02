@@ -40,15 +40,18 @@ if [ -d ${STORAGE} ]; then
          echo ""
          continue 1
       else
-         echo "Old files are deleted..."
          # Only for test
-         # (ls $FILE_DELETE -t|head -n ${BACKUPFILES_DELETE};ls $FILE_DELETE )| sort| uniq -u | wc -l
+         COUNT_FILES_TO_DELETE=$((ls $FILE_DELETE -t|head -n ${BACKUPFILES_DELETE};ls $FILE_DELETE )| sort| uniq -u | wc -l)
+         echo -n "${COUNT_FILES_TO_DELETE} old files to delete... "
+         # Only for test
+         #(ls $FILE_DELETE -t|head -n ${BACKUPFILES_DELETE};ls $FILE_DELETE )| sort| uniq -u | wc -l > /dev/null 2>&1
          (ls $FILE_DELETE -t|head -n ${BACKUPFILES_DELETE};ls $FILE_DELETE )| sort| uniq -u | xargs rm
-
+         RES1=$?
+         echo [ done ]
          # Check result
-         if [ "$?" = "0" ]; then
-            echo "Old files were deleted"
-            echo ""
+         if [ "$RES1" = "0" ]; then
+            echo -e "\n${COUNT_FILES_TO_DELETE} old files were deleted!"
+            echo "--------------------------"
          else
             echo "Error: Old files could not be deleted!"
             exit 1
@@ -59,4 +62,3 @@ else
    echo "Error: The folder \"${STORAGE}\" does not exist."
    exit 1
 fi
-
