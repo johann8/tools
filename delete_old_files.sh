@@ -11,10 +11,10 @@ set -o errexit
 
 STORAGE="/var/backup/container"
 FILE_DELETE="*.tar.gz"
-BACKUPFILES_DELETE=20
-ARRAY=($(ls ${STORAGE}))
-SCRIPT_VERSION="0.2"                       # Set script version
+BACKUPFILES_DELETE=30
+SCRIPT_VERSION="0.3"                       # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")     # time stamp
+NUMBERS_ON=false
 
 #
 ### === Run Script ===
@@ -25,8 +25,19 @@ echo "---------------------------------"
 echo "Number of backup files that should remain: \"${BACKUPFILES_DELETE}\""
 echo ""
 
-if [ -d ${STORAGE} ]; then
+# filter subfolder
+if [[ "${NUMBERS_ON}" = false ]]
+then
+    # Only letters
+    ARRAY=($(ls ${STORAGE} | grep -v '[^A-Za-z]'))
+else
+    # All Characters
+    ARRAY=($(ls ${STORAGE}))
+fi
 
+# Run delete files
+if [ -d ${STORAGE} ]; then
+   echo
    # Delete old files
    for i  in ${ARRAY[*]}; do
 
@@ -62,3 +73,4 @@ else
    echo "Error: The folder \"${STORAGE}\" does not exist."
    exit 1
 fi
+
