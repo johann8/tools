@@ -19,7 +19,7 @@ NUMBERS_ON=false
 #
 ### === Run Script ===
 #
-
+echo -e "Host: $(hostname -f)"
 echo -e "Run script at ${TIMESTAMP}"
 echo "---------------------------------"
 echo "Number of backup files that should remain: \"${BACKUPFILES_DELETE}\""
