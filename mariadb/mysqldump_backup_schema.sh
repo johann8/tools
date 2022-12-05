@@ -153,6 +153,7 @@ $RM_COMMAND -f $FILE_MAIL
 }
  
 # Main.
+log "Host: $(hostname -f)"
 log ""
 log "+-----------------------------------------------------------------+"
 log "| Start backup of --all-databases of database server............. |"
