@@ -377,7 +377,7 @@ movelog
 exit 0
 
 #
-### === Install script ===
+### === Install backup script ===
 #
 wget https://raw.githubusercontent.com/johann8/tools/master/mariadb/mysqldump_docker_backup_full.sh
 wget https://raw.githubusercontent.com/johann8/tools/master/mariadb/mysqldump_docker_backup_schema.sh
@@ -394,7 +394,7 @@ crontab -e
 15  4  *  *  *  /usr/local/bin/mysqldump_docker_backup_schema.sh > /dev/null 2>&1
 
 #
-### === Recovery ===
+### === Recovery database ===
 #
 mkdir /tmp/recovery
 tar -xvzf /var/backup/centos7/mysqldump_docker_backup_schema/kimai-mysqldump_backup_20210908_211509.sql.tar.gz -C /tmp/recovery --atime-preserve --preserve-permissions
