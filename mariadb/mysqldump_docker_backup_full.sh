@@ -164,12 +164,12 @@ log ""
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "${DOCKER_COMMAND}" ]; then
-        log "Check if command '${DOCKER_COMMAND}' was found.................  [FAILED]"
+        log "Check if command '${DOCKER_COMMAND}' was found....................[FAILED]"
         sendmail ERROR
         movelog
         exit 12
 else
-        log "Check if command '${DOCKER_COMMAND}' was found...............  ..[  OK  ]"
+        log "Check if command '${DOCKER_COMMAND}' was found....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
@@ -295,11 +295,11 @@ fi
  
 if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
         log "Dump data with bin-log data ..."
-		${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} mariadb sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --master-data=1 --flush-logs --triggers --routines --events --hex-blob' > $FILE_BACKUP
+        ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --master-data=1 --flush-logs --triggers --routines --events --hex-blob' > $FILE_BACKUP
 else
         log "Dump data ..."
         log "$FILE_BACKUP"
-        ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} mariadb sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob' > $FILE_BACKUP
+        ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob' > $FILE_BACKUP
 fi
  
 log ""
