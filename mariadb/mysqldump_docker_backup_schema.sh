@@ -297,11 +297,11 @@ for DB in $(docker exec ${CONTAINER} sh -c 'mysql --user=root --password="${MARI
         if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
                 log "Dump data with bin-log data ..."
                 log "File: $DB-$FILE_BACKUP"
-                ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} mariadb sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
+                ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
         else
                 log "Dump data ..."
                 log "File: $DB-$FILE_BACKUP"
-                ${DOCKER_COMMAND} exec -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} mariadb sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
+                ${DOCKER_COMMAND} exec -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
 
         fi
  
