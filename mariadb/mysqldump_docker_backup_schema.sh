@@ -50,7 +50,7 @@ SCRIPT_NAME='mysqldump_docker_backup_schema'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
-DIR_BACKUP='/var/backup/'${_HOST}'/container/mysqldump_schema'
+DIR_BACKUP='/var/backup/'${_HOST}'/mysqldump_schema'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
 BACKUPFILES_DELETE=30
