@@ -15,9 +15,7 @@
 ##############################################################################
 #  +----------------------------------------------------------------------+  #
 #  | This program is free software; you can redistribute it and/or modify |  #
-#  | it under the terms of the GNU General Public License as published by |  #
-#  | the Free Software Foundation; either version 2 of the License, or    |  #
-#  | (at your option) any later version.                                  |  #
+#  | it.                                                                  |  #
 #  +----------------------------------------------------------------------+  #
 #                                                                            #
 # Copyright (c) 2023 by Johann Hahn.                                         #
@@ -403,15 +401,14 @@ docker exec -i mariadb sh -c 'exec mysql -uroot -p"$MARIADB_ROOT_PASSWORD"' < /t
 #
 ### === Logrotate ===
 #
-vim /etc/logrotate.d/mysqldump
--------------
- /var/log/mysqldump_docker_backup_full.log /var/log/mysqldump_docker_backup_schema.log {
+cat > bacula-dir_template.conf << 'EOL'
+/var/log/mysqldump_docker_backup_full.log /var/log/mysqldump_docker_backup_schema.log {
     weekly
     missingok
     rotate 4
     compress
 }
-----------------
+EOL
 
 # ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 # cd  /var/backup/mysqldump_docker_backup_schema/ && (ls *.tar.gz -t |head -n 225; ls *.tar.gz) |sort |uniq -u
