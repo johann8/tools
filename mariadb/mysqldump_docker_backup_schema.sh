@@ -169,7 +169,7 @@ if [ ! -s "${DOCKER_COMMAND}" ]; then
         movelog
         exit 12
 else
-        log "Check if command '${DOCKER_COMMAND}' was found...............  ..[  OK  ]"
+        log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
