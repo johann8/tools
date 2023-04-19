@@ -164,12 +164,12 @@ log ""
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "${DOCKER_COMMAND}" ]; then
-        log "Check if command '${DOCKER_COMMAND}' was found..................[FAILED]"
+        log "Check if command '${DOCKER_COMMAND}' was found...................[FAILED]"
         sendmail ERROR
         movelog
         exit 12
 else
-        log "Check if command '${DOCKER_COMMAND}' was found..................[  OK  ]"
+        log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
