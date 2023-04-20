@@ -46,7 +46,7 @@
 ##############################################################################
  
 # CUSTOM - Script-Name.
-SCRIPT_NAME='mysqldump_backup_full'
+SCRIPT_NAME='mysqldump_docker_backup_full'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
