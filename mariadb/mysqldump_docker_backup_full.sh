@@ -39,6 +39,11 @@
 # Version     : 1.03                                                         #
 # Description : Delete some custom parameters                                #
 # -------------------------------------------------------------------------- #
+#
+# -------------------------------------------------------------------------- #
+# Version     : 1.04                                                         #
+# Description : Small changes                                                #
+# -------------------------------------------------------------------------- #
 ##############################################################################
  
 ##############################################################################
@@ -72,7 +77,9 @@ MAIL_STATUS='Y'
 
 # CUSTOM - docker container name
 # CONTAINER=$(docker ps --format '{{.Names}}:{{.Image}}' | grep 'mysql\|mariadb' | cut -d":" -f1)
-CONTAINER=mariadb
+CONTAINER=$(docker container ls | grep 'mariadb:10.11' | cut -d" " -f1)
+#CONTAINER=mariadb
+
  
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -295,9 +302,12 @@ fi
  
 if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
         log "Dump data with bin-log data ..."
+        log "Container ID: ${CONTAINER} ..."
+        log "$FILE_BACKUP"
         ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --master-data=1 --flush-logs --triggers --routines --events --hex-blob' > $FILE_BACKUP
 else
         log "Dump data ..."
+        log "Container ID: ${CONTAINER} ..."
         log "$FILE_BACKUP"
         ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob' > $FILE_BACKUP
 fi
