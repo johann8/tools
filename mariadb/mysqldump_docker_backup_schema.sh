@@ -355,18 +355,18 @@ done
  
 # Delete LOCK file.
 if [ "$?" != "0" ]; then
-        retval $?
-        log ""
-        $RM_COMMAND -f $FILE_LOCK
-        sendmail ERROR
-        movelog
-        exit 99
+   retval $?
+   log ""
+   $RM_COMMAND -f $FILE_LOCK
+   sendmail ERROR
+   movelog
+   exit 99
 else
-        log ""
-        log "+-----------------------------------------------------------------+"
-        log "| End backup $SCRIPT_NAME ..................... |"
-        log "+-----------------------------------------------------------------+"
-        log ""
+   log ""
+   log "+-----------------------------------------------------------------+"
+   log "| End backup $SCRIPT_NAME ..................... |"
+   log "+-----------------------------------------------------------------+"
+   log ""
 fi
  
 # Finish syncing.
@@ -411,7 +411,7 @@ docker exec -i mariadb sh -c 'exec mysql -uroot -p"$MARIADB_ROOT_PASSWORD"' < /t
 #
 ### === Logrotate ===
 #
-cat > bacula-dir_template.conf << 'EOL'
+cat > /etc/logrotate.d/mysqldump << 'EOL'
 /var/log/mysqldump_docker_backup_full.log /var/log/mysqldump_docker_backup_schema.log {
     weekly
     missingok

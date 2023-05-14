@@ -112,29 +112,29 @@ function log() {
  
 function retval() {
 if [ "$?" != "0" ]; then
-        case "$?" in
-        *)
-                log "ERROR: Unknown error $?"
-        ;;
-        esac
+   case "$?" in
+   *)
+      log "ERROR: Unknown error $?"
+   ;;
+   esac
 fi
 }
  
 function movelog() {
-        $CAT_COMMAND $FILE_LAST_LOG >> $FILE_LOG
-        $RM_COMMAND -f $FILE_LAST_LOG
-        $RM_COMMAND -f $FILE_LOCK
+   $CAT_COMMAND $FILE_LAST_LOG >> $FILE_LOG
+   $RM_COMMAND -f $FILE_LAST_LOG
+   $RM_COMMAND -f $FILE_LOCK
 }
  
 function sendmail() {
-        case "$1" in
-        'STATUS')
-                MAIL_SUBJECT='Status execution '$SCRIPT_NAME' script.'
-        ;;
-        *)
-                MAIL_SUBJECT='ERROR while execution '$SCRIPT_NAME' script !!!'
-        ;;
-        esac
+   case "$1" in
+   'STATUS')
+      MAIL_SUBJECT='Status execution '$SCRIPT_NAME' script.'
+   ;;
+   *)
+      MAIL_SUBJECT='ERROR while execution '$SCRIPT_NAME' script !!!'
+   ;;
+   esac
  
 $CAT_COMMAND <<MAIL >$FILE_MAIL
 Subject: $MAIL_SUBJECT
@@ -171,116 +171,116 @@ log ""
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "${DOCKER_COMMAND}" ]; then
-        log "Check if command '${DOCKER_COMMAND}' was found...................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 12
+   log "Check if command '${DOCKER_COMMAND}' was found...................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 12
 else
-        log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
+   log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$SED_COMMAND" ]; then
-        log "Check if command '$SED_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 13
+   log "Check if command '$SED_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 13
 else
-        log "Check if command '$SED_COMMAND' was found......................[  OK  ]"
+   log "Check if command '$SED_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TAR_COMMAND" ]; then
-        log "Check if command '$TAR_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 12
+   log "Check if command '$TAR_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 12
 else
-        log "Check if command '$TAR_COMMAND' was found......................[  OK  ]"
+   log "Check if command '$TAR_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TOUCH_COMMAND" ]; then
-        log "Check if command '$TOUCH_COMMAND' was found....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 13
+   log "Check if command '$TOUCH_COMMAND' was found....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 13
 else
-        log "Check if command '$TOUCH_COMMAND' was found....................[  OK  ]"
+   log "Check if command '$TOUCH_COMMAND' was found....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$RM_COMMAND" ]; then
-        log "Check if command '$RM_COMMAND' was found.......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 14
+   log "Check if command '$RM_COMMAND' was found.......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 14
 else
-        log "Check if command '$RM_COMMAND' was found.......................[  OK  ]"
+   log "Check if command '$RM_COMMAND' was found.......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$CAT_COMMAND" ]; then
-        log "Check if command '$CAT_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 15
+   log "Check if command '$CAT_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 15
 else
-        log "Check if command '$CAT_COMMAND' was found......................[  OK  ]"
+   log "Check if command '$CAT_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$DATE_COMMAND" ]; then
-        log "Check if command '$DATE_COMMAND' was found.....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 16
+   log "Check if command '$DATE_COMMAND' was found.....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 16
 else
-        log "Check if command '$DATE_COMMAND' was found.....................[  OK  ]"
+   log "Check if command '$DATE_COMMAND' was found.....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$MKDIR_COMMAND" ]; then
-        log "Check if command '$MKDIR_COMMAND' was found....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 17
+   log "Check if command '$MKDIR_COMMAND' was found....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 17
 else
-        log "Check if command '$MKDIR_COMMAND' was found....................[  OK  ]"
+   log "Check if command '$MKDIR_COMMAND' was found....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$PROG_SENDMAIL" ]; then
-        log "Check if command '$PROG_SENDMAIL' was found................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 18
+   log "Check if command '$PROG_SENDMAIL' was found................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 18
 else
-        log "Check if command '$PROG_SENDMAIL' was found................[  OK  ]"
+   log "Check if command '$PROG_SENDMAIL' was found................[  OK  ]"
 fi
  
 # Check if LOCK file NOT exist.
 if [ ! -e "$FILE_LOCK" ]; then
-        log "Check if script is NOT already runnig .....................[  OK  ]"
+   log "Check if script is NOT already runnig .....................[  OK  ]"
  
-        $TOUCH_COMMAND $FILE_LOCK
+   $TOUCH_COMMAND $FILE_LOCK
 else
-        log "Check if script is NOT already runnig .....................[FAILED]"
-        log ""
-        log "ERROR: The script was already running, or LOCK file already exists!"
-        log ""
-        sendmail ERROR
-        movelog
-        exit 20
+   log "Check if script is NOT already runnig .....................[FAILED]"
+   log ""
+   log "ERROR: The script was already running, or LOCK file already exists!"
+   log ""
+   sendmail ERROR
+   movelog
+   exit 20
 fi
  
 # Check if DIR_BACKUP Directory NOT exists.
 if [ ! -d "$DIR_BACKUP" ]; then
-        log "Check if DIR_BACKUP exists.................................[FAILED]"
-        $MKDIR_COMMAND -p $DIR_BACKUP
-        log "DIR_BACKUP was now created.................................[  OK  ]"
+   log "Check if DIR_BACKUP exists.................................[FAILED]"
+   $MKDIR_COMMAND -p $DIR_BACKUP
+   log "DIR_BACKUP was now created.................................[  OK  ]"
 else
-        log "Check if DIR_BACKUP exists.................................[  OK  ]"
+   log "Check if DIR_BACKUP exists.................................[  OK  ]"
 fi
  
 # Start backup.
@@ -301,15 +301,15 @@ else
 fi
  
 if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
-        log "Dump data with bin-log data ..."
-        log "Container ID: ${CONTAINER} ..."
-        log "$FILE_BACKUP"
-        ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --master-data=1 --flush-logs --triggers --routines --events --hex-blob' > $FILE_BACKUP
+   log "Dump data with bin-log data ..."
+   log "Container ID: ${CONTAINER} ..."
+   log "$FILE_BACKUP"
+   ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --master-data=1 --flush-logs --triggers --routines --events --hex-blob' > $FILE_BACKUP
 else
-        log "Dump data ..."
-        log "Container ID: ${CONTAINER} ..."
-        log "$FILE_BACKUP"
-        ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob' > $FILE_BACKUP
+   log "Dump data ..."
+   log "Container ID: ${CONTAINER} ..."
+   log "$FILE_BACKUP"
+   ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --all-databases --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob' > $FILE_BACKUP
 fi
  
 log ""
@@ -353,18 +353,18 @@ $RM_COMMAND $FILE_BACKUP
  
 # Delete LOCK file.
 if [ "$?" != "0" ]; then
-        retval $?
-        log ""
-        $RM_COMMAND -f $FILE_LOCK
-        sendmail ERROR
-        movelog
-        exit 99
+   retval $?
+   log ""
+   $RM_COMMAND -f $FILE_LOCK
+   sendmail ERROR
+   movelog
+   exit 99
 else
-        log ""
-        log "+-----------------------------------------------------------------+"
-        log "| End backup $SCRIPT_NAME .............................. |"
-        log "+-----------------------------------------------------------------+"
-        log ""
+   log ""
+   log "+-----------------------------------------------------------------+"
+   log "| End backup $SCRIPT_NAME .............................. |"
+   log "+-----------------------------------------------------------------+"
+   log ""
 fi
  
 # Finish syncing.
@@ -375,7 +375,7 @@ log ""
  
 # Status e-mail.
 if [ $MAIL_STATUS = 'Y' ]; then
-        sendmail STATUS
+   sendmail STATUS
 fi
 # Move temporary log to permanent log
 movelog
@@ -415,7 +415,7 @@ docker exec -i mariadb sh -c 'exec mysql -uroot -p"$MARIADB_ROOT_PASSWORD"' < /t
 #
 ### === Logrotate ===
 #
-cat > bacula-dir_template.conf << 'EOL'
+cat > /etc/logrotate.d/mysqldump << 'EOL'
 /var/log/mysqldump_docker_backup_full.log /var/log/mysqldump_docker_backup_schema.log {
     weekly
     missingok
