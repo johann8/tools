@@ -39,6 +39,11 @@
 # Version     : 1.03                                                         #
 # Description : Delete some custom parameters                                #
 # -------------------------------------------------------------------------- #
+#
+# -------------------------------------------------------------------------- #
+# Version     : 1.04                                                         #
+# Description : Small changes                                                #
+# -------------------------------------------------------------------------- #
 ##############################################################################
 
 ##############################################################################
@@ -70,9 +75,13 @@ MAIL_RECIPIENT='you@example.com'
 # CUSTOM - Status-Mail [Y|N].
 MAIL_STATUS='Y'
 
-# CUSTOM - docker container name
+### CUSTOM - docker container name
+#
+### === CHANGEME ===
+#
 # CONTAINER=$(docker ps --format '{{.Names}}:{{.Image}}' | grep 'mysql\|mariadb' | cut -d":" -f1)
-CONTAINER=mariadb
+CONTAINER=$(docker container ls | grep 'mariadb:10.11' | cut -d" " -f1)
+#CONTAINER=mariadb
  
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -164,116 +173,116 @@ log ""
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "${DOCKER_COMMAND}" ]; then
-        log "Check if command '${DOCKER_COMMAND}' was found...................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 12
+   log "Check if command '${DOCKER_COMMAND}' was found...................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 12
 else
-        log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
+   log "Check if command '${DOCKER_COMMAND}' was found...................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$SED_COMMAND" ]; then
-        log "Check if command '$SED_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 13
+   log "Check if command '$SED_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 13
 else
         log "Check if command '$SED_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TAR_COMMAND" ]; then
-        log "Check if command '$TAR_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 14
+   log "Check if command '$TAR_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 14
 else
-        log "Check if command '$TAR_COMMAND' was found......................[  OK  ]"
+   log "Check if command '$TAR_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TOUCH_COMMAND" ]; then
-        log "Check if command '$TOUCH_COMMAND' was found....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 15
+   log "Check if command '$TOUCH_COMMAND' was found....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 15
 else
-        log "Check if command '$TOUCH_COMMAND' was found....................[  OK  ]"
+   log "Check if command '$TOUCH_COMMAND' was found....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$RM_COMMAND" ]; then
-        log "Check if command '$RM_COMMAND' was found.......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 16
+   log "Check if command '$RM_COMMAND' was found.......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 16
 else
-        log "Check if command '$RM_COMMAND' was found.......................[  OK  ]"
+   log "Check if command '$RM_COMMAND' was found.......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$CAT_COMMAND" ]; then
-        log "Check if command '$CAT_COMMAND' was found......................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 17
+   log "Check if command '$CAT_COMMAND' was found......................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 17
 else
-        log "Check if command '$CAT_COMMAND' was found......................[  OK  ]"
+   log "Check if command '$CAT_COMMAND' was found......................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$DATE_COMMAND" ]; then
-        log "Check if command '$DATE_COMMAND' was found.....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 18
+   log "Check if command '$DATE_COMMAND' was found.....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 18
 else
-        log "Check if command '$DATE_COMMAND' was found.....................[  OK  ]"
+   log "Check if command '$DATE_COMMAND' was found.....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$MKDIR_COMMAND" ]; then
-        log "Check if command '$MKDIR_COMMAND' was found....................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 19
+   log "Check if command '$MKDIR_COMMAND' was found....................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 19
 else
-        log "Check if command '$MKDIR_COMMAND' was found....................[  OK  ]"
+   log "Check if command '$MKDIR_COMMAND' was found....................[  OK  ]"
 fi
  
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$PROG_SENDMAIL" ]; then
-        log "Check if command '$PROG_SENDMAIL' was found................[FAILED]"
-        sendmail ERROR
-        movelog
-        exit 20
+   log "Check if command '$PROG_SENDMAIL' was found................[FAILED]"
+   sendmail ERROR
+   movelog
+   exit 20
 else
-        log "Check if command '$PROG_SENDMAIL' was found................[  OK  ]"
+   log "Check if command '$PROG_SENDMAIL' was found................[  OK  ]"
 fi
  
 # Check if LOCK file NOT exist.
 if [ ! -e "$FILE_LOCK" ]; then
-        log "Check if script is NOT already runnig .....................[  OK  ]"
+   log "Check if script is NOT already runnig .....................[  OK  ]"
  
-        $TOUCH_COMMAND $FILE_LOCK
+   $TOUCH_COMMAND $FILE_LOCK
 else
-        log "Check if script is NOT already runnig .....................[FAILED]"
-        log ""
-        log "ERROR: The script was already running, or LOCK file already exists!"
-        log ""
-        sendmail ERROR
-        movelog
-        exit 30
+   log "Check if script is NOT already runnig .....................[FAILED]"
+   log ""
+   log "ERROR: The script was already running, or LOCK file already exists!"
+   log ""
+   sendmail ERROR
+   movelog
+   exit 30
 fi
  
 # Check if DIR_BACKUP Directory NOT exists.
 if [ ! -d "$DIR_BACKUP" ]; then
-        log "Check if DIR_BACKUP exists.................................[FAILED]"
-        $MKDIR_COMMAND -p $DIR_BACKUP
-        log "DIR_BACKUP was now created.................................[  OK  ]"
+   log "Check if DIR_BACKUP exists.................................[FAILED]"
+   $MKDIR_COMMAND -p $DIR_BACKUP
+   log "DIR_BACKUP was now created.................................[  OK  ]"
 else
-        log "Check if DIR_BACKUP exists.................................[  OK  ]"
+   log "Check if DIR_BACKUP exists.................................[  OK  ]"
 fi
  
 # Start backup.
@@ -288,58 +297,59 @@ log ""
 cd $DIR_BACKUP
  
 if [ $DUMP_LOCK_ALL_TABLE = 'Y' ]; then
-        DUMP_LOCK_ALL_TABLE='--lock-all-tables'
+   DUMP_LOCK_ALL_TABLE='--lock-all-tables'
 else
-        DUMP_LOCK_ALL_TABLE='--single-transaction'
+   DUMP_LOCK_ALL_TABLE='--single-transaction'
 fi
  
 for DB in $(docker exec ${CONTAINER} sh -c 'mysql --user=root --password="${MARIADB_ROOT_PASSWORD}" --execute="show databases \G"' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
-        if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
-                log "Dump data with bin-log data ..."
-                log "File: $DB-$FILE_BACKUP"
-                ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
-        else
-                log "Dump data ..."
-                log "File: $DB-$FILE_BACKUP"
-                ${DOCKER_COMMAND} exec -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
-
-        fi
+   if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
+      log "Dump data with bin-log data ..."
+      log "Container ID: ${CONTAINER} ..."
+      log "File: $DB-$FILE_BACKUP"
+      ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
+   else
+      log "Dump data ..."
+      log "Container ID: ${CONTAINER} ..."
+      log "File: $DB-$FILE_BACKUP"
+      ${DOCKER_COMMAND} exec -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
+   fi
  
-        log ""
-        log "Packaging to archive ..."
-        $TAR_COMMAND -cvzf $DB-$FILE_BACKUP.tar.gz $DB-$FILE_BACKUP --atime-preserve --preserve-permissions
+   log ""
+   log "Packaging to archive ..."
+   $TAR_COMMAND -cvzf $DB-$FILE_BACKUP.tar.gz $DB-$FILE_BACKUP --atime-preserve --preserve-permissions
  
-        log ""
-        log "Delete archive files ..."
+   log ""
+   log "Delete archive files ..."
 
-        #(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
-        #if [ "$?" != "0" ]; then
-        #        log "Delete old archive files $DIR_BACKUP .....[FAILED]"
-        #else
-        #        log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
-        #fi
+   #(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+   #if [ "$?" != "0" ]; then
+   #        log "Delete old archive files $DIR_BACKUP .....[FAILED]"
+   #else
+   #        log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+   #fi
 
-        ### ======= Added J. Hahn ========
-        #   ----------- Start ------------
-        COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-        if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
-            log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
-            log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
-        else
-            (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
-            if [ "$?" != "0" ]; then
-                log "Delete old archive files $DIR_BACKUP .....[FAILED]"
-            else
-                COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-                log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
-                log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
-            fi
-        fi
+   ### ======= Added J. Hahn ========
+   #   ----------- Start ------------
+   COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+   if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
+      log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+      log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
+   else
+      (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+      if [ "$?" != "0" ]; then
+         log "Delete old archive files $DIR_BACKUP .....[FAILED]"
+      else
+         COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+         log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+         log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+      fi
+   fi
         #   ------------ End ---------- 
 
-        log ""
-        log "Delete dumpfile ..."
-        $RM_COMMAND $DB-$FILE_BACKUP
+   log ""
+   log "Delete dumpfile ..."
+   $RM_COMMAND $DB-$FILE_BACKUP
  
 done
  
