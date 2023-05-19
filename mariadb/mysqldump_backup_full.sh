@@ -153,9 +153,9 @@ $RM_COMMAND -f $FILE_MAIL
 # Main.
 log "Host: $(hostname -f)"
 log ""
-log "+-----------------------------------------------------------------+"
-log "| Start backup of --all-databases of database server............. |"
-log "+-----------------------------------------------------------------+"
+log "+-------------------------------------------------------------------+"
+log "| Start backup of --all-databases of database server |"
+log "+-------------------------------------------------------------------+"
 log ""
 log "Run script with following parameter:"
 log ""
@@ -274,7 +274,7 @@ fi
 # Start backup.
 log ""
 log "+-----------------------------------------------------------------+"
-log "| Run backup $SCRIPT_NAME .............................. |"
+log "| Run backup $SCRIPT_NAME .................. |"
 log "+-----------------------------------------------------------------+"
 log ""
  
@@ -303,7 +303,9 @@ log "File: $FILE_BACKUP.tar.gz"
 $TAR_COMMAND -cvzf $FILE_BACKUP.tar.gz $FILE_BACKUP --atime-preserve --preserve-permissions
  
 log ""
-log "Delete archive files ..."
+COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+log "Total archived files: ${COUNT_FILES} "
+log "Delete old archived files ..."
 
 #(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 #if [ "$?" != "0" ]; then
@@ -315,7 +317,6 @@ log "Delete archive files ..."
 #
 ### ======= Added J. Hahn ========
 #   ----------- Start ------------
-COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
 if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
     log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
     log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
@@ -327,7 +328,7 @@ else
     else
         COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
         log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
-        log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+        log "Number of remaining archived files $DIR_BACKUP: ${COUNT_FILES} ......[  OK  ]"
     fi
 fi
 #   ------------ End ----------
@@ -347,14 +348,14 @@ if [ "$?" != "0" ]; then
 else
         log ""
         log "+-----------------------------------------------------------------+"
-        log "| End backup $SCRIPT_NAME .............................. |"
+        log "| End backup $SCRIPT_NAME ................. |"
         log "+-----------------------------------------------------------------+"
         log ""
 fi
  
 # Finish syncing.
 log "+-----------------------------------------------------------------+"
-log "| Finish......................................................... |"
+log "| Finish................................................................... |"
 log "+-----------------------------------------------------------------+"
 log ""
  
