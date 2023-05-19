@@ -48,6 +48,11 @@
 # Version     : 1.03                                                         #
 # Description : Add variable MYSQL_PORT; Changed Command: mysqldump          #
 # -------------------------------------------------------------------------- #
+#
+# -------------------------------------------------------------------------- #
+# Version     : 1.04                                                         #
+# Description : Add more verbosity; changed log format                       #
+# -------------------------------------------------------------------------- #
 ##############################################################################
 
 ##############################################################################
@@ -62,7 +67,13 @@ _HOST=$(echo $(hostname) | cut -d"." -f1)
 DIR_BACKUP='/var/backup/'${_HOST}'/mysqldump_backup_schema'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
-BACKUPFILES_DELETE=30
+# Number DBs x 30 Days
+# Example: 11 x 30 = 330
+# Actual: 5 x 30 = 150
+DB_NUMBER=5
+DAYS_NUMBER=30
+BACKUPFILES_DELETE=$((${DB_NUMBER} * ${DAYS_NUMBER}))
+BACKUPFILES_DELETE_DB=${DAYS_NUMBER}
  
 # CUSTOM - mysqldump Parameter.
 DUMP_HOST='127.0.0.1'
@@ -326,6 +337,8 @@ for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USE
         $TAR_COMMAND -cvzf $DB-$FILE_BACKUP.tar.gz $DB-$FILE_BACKUP --atime-preserve --preserve-permissions
  
         log ""
+        COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
+        log "Total archived files: ${COUNT_FILES} "
         log "Delete archive files ..."
 
         #(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
@@ -337,7 +350,6 @@ for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USE
 
         ### ======= Added J. Hahn ========
         #   ----------- Start ------------
-        COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
         if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
             log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
             log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
@@ -346,9 +358,9 @@ for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USE
             if [ "$?" != "0" ]; then
                 log "Delete old archive files $DIR_BACKUP .....[FAILED]"
             else
-                COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-                log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
-                log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
+                COUNT_FILES_PER_DB=$(ls -t *.tar.gz |sort | uniq -u | awk -F- '{print $1}' | grep ${DB} | wc -l)
+                log "The number of files to retain per DB: \"${BACKUPFILES_DELETE_DB}\" .................[  OK  ]"
+                log "Number of remaining archived filesi per DB: \"${COUNT_FILES_PER_DB}\" ...............[  OK  ]"
             fi
         fi
         #   ------------ End ---------- 
