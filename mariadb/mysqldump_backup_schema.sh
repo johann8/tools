@@ -167,7 +167,7 @@ $RM_COMMAND -f $FILE_MAIL
 log "Host: $(hostname -f)"
 log ""
 log "+-----------------------------------------------------------------+"
-log "| Start backup of --all-databases of database server............. |"
+log "| Start backup of schemas of database server........ |"
 log "+-----------------------------------------------------------------+"
 log ""
 log "Run script with following parameter:"
@@ -187,9 +187,9 @@ if [ ! -s "$MYSQLDUMP_COMMAND" ]; then
         movelog
         exit 11
 else
-        log "Check if command '$MYSQLDUMP_COMMAND' was found................[  OK  ]"
+        log "Check if command '$MYSQLDUMP_COMMAND' was found.........[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$MYSQL_COMMAND" ]; then
         log "Check if command '$MYSQL_COMMAND' was found....................[FAILED]"
@@ -197,9 +197,9 @@ if [ ! -s "$MYSQL_COMMAND" ]; then
         movelog
         exit 12
 else
-        log "Check if command '$MYSQL_COMMAND' was found....................[  OK  ]"
+        log "Check if command '$MYSQL_COMMAND' was found..................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$SED_COMMAND" ]; then
         log "Check if command '$SED_COMMAND' was found......................[FAILED]"
@@ -209,7 +209,7 @@ if [ ! -s "$SED_COMMAND" ]; then
 else
         log "Check if command '$SED_COMMAND' was found......................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TAR_COMMAND" ]; then
         log "Check if command '$TAR_COMMAND' was found......................[FAILED]"
@@ -217,9 +217,9 @@ if [ ! -s "$TAR_COMMAND" ]; then
         movelog
         exit 14
 else
-        log "Check if command '$TAR_COMMAND' was found......................[  OK  ]"
+        log "Check if command '$TAR_COMMAND' was found.......................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$TOUCH_COMMAND" ]; then
         log "Check if command '$TOUCH_COMMAND' was found....................[FAILED]"
@@ -227,9 +227,9 @@ if [ ! -s "$TOUCH_COMMAND" ]; then
         movelog
         exit 15
 else
-        log "Check if command '$TOUCH_COMMAND' was found....................[  OK  ]"
+        log "Check if command '$TOUCH_COMMAND' was found..................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$RM_COMMAND" ]; then
         log "Check if command '$RM_COMMAND' was found.......................[FAILED]"
@@ -239,7 +239,7 @@ if [ ! -s "$RM_COMMAND" ]; then
 else
         log "Check if command '$RM_COMMAND' was found.......................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$CAT_COMMAND" ]; then
         log "Check if command '$CAT_COMMAND' was found......................[FAILED]"
@@ -247,9 +247,9 @@ if [ ! -s "$CAT_COMMAND" ]; then
         movelog
         exit 17
 else
-        log "Check if command '$CAT_COMMAND' was found......................[  OK  ]"
+        log "Check if command '$CAT_COMMAND' was found.......................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$DATE_COMMAND" ]; then
         log "Check if command '$DATE_COMMAND' was found.....................[FAILED]"
@@ -257,9 +257,9 @@ if [ ! -s "$DATE_COMMAND" ]; then
         movelog
         exit 18
 else
-        log "Check if command '$DATE_COMMAND' was found.....................[  OK  ]"
+        log "Check if command '$DATE_COMMAND' was found....................[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$MKDIR_COMMAND" ]; then
         log "Check if command '$MKDIR_COMMAND' was found....................[FAILED]"
@@ -267,9 +267,9 @@ if [ ! -s "$MKDIR_COMMAND" ]; then
         movelog
         exit 19
 else
-        log "Check if command '$MKDIR_COMMAND' was found....................[  OK  ]"
+        log "Check if command '$MKDIR_COMMAND' was found............  .....[  OK  ]"
 fi
- 
+
 # Check if command (file) NOT exist OR IS empty.
 if [ ! -s "$PROG_SENDMAIL" ]; then
         log "Check if command '$PROG_SENDMAIL' was found................[FAILED]"
@@ -277,13 +277,13 @@ if [ ! -s "$PROG_SENDMAIL" ]; then
         movelog
         exit 20
 else
-        log "Check if command '$PROG_SENDMAIL' was found................[  OK  ]"
+        log "Check if command '$PROG_SENDMAIL' was found...........[  OK  ]"
 fi
- 
+
 # Check if LOCK file NOT exist.
 if [ ! -e "$FILE_LOCK" ]; then
-        log "Check if script is NOT already runnig .....................[  OK  ]"
- 
+        log "Check if script is NOT already runnig ..............  ...........[  OK  ]"
+
         $TOUCH_COMMAND $FILE_LOCK
 else
         log "Check if script is NOT already runnig .....................[FAILED]"
@@ -294,20 +294,21 @@ else
         movelog
         exit 30
 fi
- 
+
 # Check if DIR_BACKUP Directory NOT exists.
 if [ ! -d "$DIR_BACKUP" ]; then
         log "Check if DIR_BACKUP exists.................................[FAILED]"
         $MKDIR_COMMAND -p $DIR_BACKUP
         log "DIR_BACKUP was now created.................................[  OK  ]"
 else
-        log "Check if DIR_BACKUP exists.................................[  OK  ]"
+        log "Check if DIR_BACKUP exists.........................................[  OK  ]"
 fi
+
  
 # Start backup.
 log ""
 log "+-----------------------------------------------------------------+"
-log "| Run backup $SCRIPT_NAME ............................ |"
+log "| Run backup $SCRIPT_NAME .......... |"
 log "+-----------------------------------------------------------------+"
 log ""
  
@@ -359,8 +360,8 @@ for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USE
                 log "Delete old archive files $DIR_BACKUP .....[FAILED]"
             else
                 COUNT_FILES_PER_DB=$(ls -t *.tar.gz |sort | uniq -u | awk -F- '{print $1}' | grep ${DB} | wc -l)
-                log "The number of files to retain per DB: \"${BACKUPFILES_DELETE_DB}\" .................[  OK  ]"
-                log "Number of remaining archived filesi per DB: \"${COUNT_FILES_PER_DB}\" ...............[  OK  ]"
+                log "The number of files to retain per DB: \"${BACKUPFILES_DELETE_DB}\" ...................[  OK  ]"
+                log "Number of remaining archived filesi per DB: \"${COUNT_FILES_PER_DB}\" ........[  OK  ]"
             fi
         fi
         #   ------------ End ---------- 
@@ -382,14 +383,14 @@ if [ "$?" != "0" ]; then
 else
         log ""
         log "+-----------------------------------------------------------------+"
-        log "| End backup $SCRIPT_NAME ............................ |"
+        log "| End backup $SCRIPT_NAME .......... |"
         log "+-----------------------------------------------------------------+"
         log ""
 fi
  
 # Finish syncing.
 log "+-----------------------------------------------------------------+"
-log "| Finish......................................................... |"
+log "| Finish................................................................... |"
 log "+-----------------------------------------------------------------+"
 log ""
  
