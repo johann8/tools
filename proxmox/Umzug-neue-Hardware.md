@@ -152,7 +152,7 @@ netstat -tulpen |grep 25
 -----------------------------
 tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      0          30853      1284/master
 tcp6       0      0 ::1:25                  :::*                    LISTEN      0          30854      1284/master
-----------------------------
+-----------------------------
 
 # install postfix
 apt-get install postfix libsasl2-modules
@@ -181,7 +181,7 @@ compatibility_level = 2
 vim /etc/postfix/sasl_passwd
 -------------------------
 [smtp.myfirma.de]:587    helpdesk@myfirma.de:MySuperPassword
--------------------
+-------------------------
 chmod 600 /etc/postfix/sasl_passwd
 postmap /etc/postfix/sasl_passwd
 
@@ -209,3 +209,5 @@ crontab -e
 0  22 * * 7 /usr/sbin/mdadm --monitor --test --oneshot /dev/md0
 ---------------------------
 ```
+
+Enjoy!
