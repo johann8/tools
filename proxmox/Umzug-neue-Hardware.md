@@ -14,7 +14,7 @@
   - [SMTP Service konfigurieren](#smtp-service-konfigurieren)
 
 ## Serverbestellung
-Der Server wird bei [Coreto](https://www.rect.coreto.de/de/tower-server-systeme/mid-range-tower-server.html) besstellt. Der Server hat ein Mid-Range Tower Gehäuse - Silent Edition mit Intel Xeon CPU. Für das Betriebssystem wird ein Hardware RID-Controller mit drei Festplatten benutzt. Es wird ein RAID1 mit einer Hot Spare HDD erstellt. Für VM Storage wird ein Software RAID1 mit zwei NVMe PCIe SSD-Karten erstellt `1,6 TB NVMe SSD Samsung PM1735 Series (1.000.000 IOPS, 7000 MB/s lesen, 8760 TBW, PCIe Gen4 x8)`.
+Der Server wird bei [Coreto](https://www.rect.coreto.de/de/tower-server-systeme/mid-range-tower-server.html) besstellt. Der Server hat ein Mid-Range Tower Gehäuse - Silent Edition mit Intel Xeon CPU. Für das Betriebssystem wird ein Hardware RAID-Controller mit drei Festplatten benutzt. Es wird ein RAID1 mit einer Hot Spare HDD erstellt. Für VM Storage wird ein Software RAID1 mit zwei NVMe PCIe SSD-Karten `1,6 TB NVMe SSD Samsung PM1735 Series (1.000.000 IOPS, 7000 MB/s lesen, 8760 TBW, PCIe Gen4 x8)` erstellt.
 
 ## Vorbereitung
 - Die Konfiguration des alten Servers sichern und über MeshCentral Server auf den USB-Stick laden
@@ -41,6 +41,8 @@ IPMI IP: 192.168.25.253
 2. Datacenter -> Backup 
 ```
 - Die Images von allen VMs erstellen: Mode=Stop 
+
+- Ein USB-Stick mit [Proxmox ISO](https://www.proxmox.com/de/downloads/category/iso-images-pve) mit Hilfe von [Ventoy Software](https://www.ventoy.net/en/download.html) erstellen
 
 <h1 align="center">Umsetzung</h1>
 
