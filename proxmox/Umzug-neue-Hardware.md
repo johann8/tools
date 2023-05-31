@@ -49,15 +49,15 @@ IPMI IP: 192.168.25.253
 
 ## Proxmox installieren
 
-# Backup Storage anbinden
+## Backup Storage anbinden
 
-# Software RAID erstellen
+## Software RAID erstellen
 
-# LVM Thin Storage für VMs einrichten
+## LVM Thin Storage für VMs einrichten
 
-# VMs restoren und auf Funktionalität testen 
+## VMs restoren und auf Funktionalität testen 
 
-# Scheduler für Backup einrichten
+## Scheduler für Backup einrichten
 
-# SMTP Service konfigurieren
+## SMTP Service konfigurieren
 
