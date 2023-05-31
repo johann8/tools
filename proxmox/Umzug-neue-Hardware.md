@@ -14,7 +14,7 @@
   - [SMTP Service konfigurieren](#smtp-service-konfigurieren)
 
 ## Serverbestellung
-Der Server wird bei [Coreto](https://www.rect.coreto.de/de/tower-server-systeme/mid-range-tower-server.html) besstellt. Der Server hat ein Mid-Range Tower Gehäuse - Silent Edition mit Intel Xeon CPU. Für das Betriebssystem wird ein Hardware RAID-Controller mit drei Festplatten benutzt. Es wird ein RAID1 mit einer Hot Spare HDD erstellt. Für VM Storage wird ein Software RAID1 mit zwei NVMe PCIe SSD-Karten `1,6 TB NVMe SSD Samsung PM1735 Series (1.000.000 IOPS, 7000 MB/s lesen, 8760 TBW, PCIe Gen4 x8)` erstellt.
+Der Server wird bei [Coreto](https://www.rect.coreto.de/de/tower-server-systeme/mid-range-tower-server.html) besstellt. Der Server hat ein Mid-Range Tower Gehäuse - Silent Edition mit Intel Xeon CPU. Für das Betriebssystem wird ein Hardware RAID-Controller mit drei Festplatten `HDD (SAS) 4TB` benutzt. Es wird ein RAID1 mit einer Hot Spare HDD erstellt. Für VM Storage wird ein Software RAID1 mit zwei NVMe PCIe SSD-Karten `1,6 TB NVMe SSD Samsung PM1735 Series (1.000.000 IOPS, 7000 MB/s lesen, 8760 TBW, PCIe Gen4 x8)` erstellt.
 
 ## Vorbereitung
 - Die Konfiguration des alten Servers sichern und über MeshCentral Server auf den USB-Stick laden
