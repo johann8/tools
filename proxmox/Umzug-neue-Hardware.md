@@ -7,9 +7,9 @@
   - [Hardware RAID erstellen](#hardware-raid-erstellen)
   - [Proxmox installieren](#proxmox-installieren)
   - [Backup Storage anbinden](#backup-storage-anbinden)
-  - [Software RAID erstellen](#)
-  - [LVM-Thin Storage für VMs einrichten](#)
-  - [VMs restoren und auf Funktionalität testen](#)
+  - [Software RAID erstellen](#software-raiderstellen)
+  - [LVM-Thin Storage für VMs einrichten](#lvm--thin-storage-für-vms-einrichten)
+  - [VMs restoren und auf Funktionalität testen](#vms-restoren-und-auf-funktionalität-testen)
   - [Scheduler für Backup einrichten](#scheduler-für-backup-einrichten)
   - [SMTP Service konfigurieren](#smtp-service-konfigurieren)
 
