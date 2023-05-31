@@ -134,7 +134,7 @@ lvs
   vmdata vmstorage twi-a-tz-- <1.31t             0.00   10.44
 ----------------------------------------------------------------------------------------------
 ```
-- Über Webinterface von Proxmox LVM-Thin Storage anlegen
+- Über Webinterface von Proxmox LVM-Thin Storage anlegen\
 Rechenzentrum -> Storage -> Button "Hinzufügen" -> "LVM thin" klicken
 Die Felder wie auf dem Bild konfigurieren
 ![LVM-Thin Storage](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/storage_lvm.png)
