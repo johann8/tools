@@ -174,7 +174,7 @@ Nach der Wiederherstellung müssen alle VMs auf Funktionalität getestet werden.
 ```
 Rechenzentrum -> Backup -> ADD 
 ```
-Die Felder wie auf dem Bild konfigurieren:
+Die Felder wie auf dem Bild konfigurieren:\
 ![Scheduler](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/backup_scheduler.png)
 
 ## SMTP Service konfigurieren
