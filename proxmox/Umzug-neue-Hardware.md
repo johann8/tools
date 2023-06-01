@@ -47,12 +47,33 @@ IPMI IP: 192.168.25.253
 <h1 align="center">Umsetzung</h1>
 
 ## BIOS Setup
+In diesem Server ist das Motherboard von [Supermocro](https://www.supermicro.com/de/) eingebaut. Man kommt ins BIOS mit der `Del` Taste. Folgende Einstellungen müssen vorgenommen werden
+- IPMI auf statische IP-Adresse umstellen `192.168.25.253`
+- Intel VT-x aktivieren falls noch nicht aktiviert ist
+- Die Bootreihenfolge anpassen
 
 ## Hardware RAID erstellen
+In diesem Server ist ein `Adaptec SmartRAID 3101E-4i` installiert. Man kommt zu `Controller configuration option` mit der Tastenkombination `Ctrl+A`. Es wird RAID1 mit einer `Hot Spare` HDD erstellt.
 
 ## Proxmox installieren
+Die Installation wird mit Hilfe von USB-Stick gemacht. Nach dem Bootvorgang wird man von `Proxmox installer` begrüßt.
+
+![Proxmox install 01](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/proxmox1.png)
+
+Im Bild unten wählt man `Target Harddisk`. Will man die Partitionierung selbst bestimmen, muss man auf `Options` klicken.
+![Proxmox install 02](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/proxmox2.png)
+
+Im Pop-Up Fenster unten gibt man die Angaben zur Partitionsgrößen an.
+![Proxmox install 03](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/proxmox3.png)
 
 ## Backup Storage anbinden
+Es wird ein QNAP Server für die Sicherung benutzt. Man bindet die NFS-Freigabe über die Webinterface von Proxmox unter:
+
+```
+Datacenter -> Storage -> ADD -> NFS
+```
+und füllt die Felder wie auf dem Bild aus:
+![QNAP NFS Storage](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/qnap-nas.png)
 
 ## Software RAID erstellen
 
