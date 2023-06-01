@@ -155,14 +155,27 @@ lvs
   vmdata vmstorage twi-a-tz-- <1.31t             0.00   10.44
 ----------------------------------------------------------------------------------------------
 ```
-- Über Webinterface von Proxmox LVM-Thin Storage anlegen\
+- Über das Webinterface von Proxmox `LVM-Thin` Storage anlegen:
+```
 Rechenzentrum -> Storage -> Button "Hinzufügen" -> "LVM thin" klicken
-Die Felder wie auf dem Bild konfigurieren
+```
+Die Felder wie auf dem Bild konfigurieren:
 ![LVM-Thin Storage](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/storage_lvm.png)
 
 ## VMs restoren und auf Funktionalität testen 
+Die VMs werden über das Webinterface von Proxmox wiederhergestellt.
+![VM Restore](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/vm_restore.png)
+
+Nach der Wiederherstellung müssen alle VMs auf Funktionalität getestet werden.
 
 ## Scheduler für Backup einrichten
+Über das Webinterface von Proxmox `Scheduler` konfigurieren:
+
+```
+Rechenzentrum -> Backup -> ADD 
+```
+Die Felder wie auf dem Bild konfigurieren:
+![Scheduler](https://raw.githubusercontent.com/johann8/tools/master/proxmox/assets/screenshots/backup_scheduler.png)
 
 ## SMTP Service konfigurieren
 
