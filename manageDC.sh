@@ -22,22 +22,31 @@ basename="${0##*/}"
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
 SCRIPT_VERSION="0.3.4"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
-# Shared DB between containers
+
+#
+### === Shared DB between containers ===
+#
+
+### *** Change me ***
 DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
 DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
 
-# Set Pathes
+#
+### === Set Pathes ===
+#
+# docker-compose
 DOCKER_COMPOSE_PATH=""
 DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
 
-DEFAULT_CONTAINER_SAVE_PATH="/opt"
+# container working dir
+#DEFAULT_CONTAINER_SAVE_PATH="/opt"
 if [[ -f ${DOCKER_COMPOSE_PATH}/docker-compose ]]
 then
-    FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
+    #FIND_CONTAINER_SAVE_PATH=$(find ${DEFAULT_CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml |uniq |head -1 |sed 's+/[^/]*$++' |sed 's+/[^/]*$++')
+    FIND_CONTAINER_SAVE_PATH=$(docker inspect $(docker ps -q) --format '{{ index .Config.Labels "com.docker.compose.project.working_dir"}}' |uniq |head -n 1 |sed 's+/[^/]*$++')    
     CONTAINER_SAVE_PATH=${FIND_CONTAINER_SAVE_PATH}
-    #CONTAINER_SAVE_PATH="${CONTAINER_SAVE_PATH:-/opt}"
 else
     print_basename "ERROR: Docker-Compose binary not found: \"${DOCKER_COMPOSE_PATH}/docker-compose\""
     exit 1
@@ -52,6 +61,10 @@ else
     # Docker microservice name may contain only: only letters and numbers
     ar=($(find ${CONTAINER_SAVE_PATH} -maxdepth 2 -name docker-compose.yml | sed 's+/[^/]*$++' | sed 's+^.*/++' | grep -v '[^A-Za-z0-9]'))
 fi
+
+# get all working dirs of container in an array 
+ar_pwd=($(docker inspect $(docker ps -q) --format '{{ index .Config.Labels "com.docker.compose.project.working_dir"}}' |uniq))
+# echo ${ar_pwd[@]} 
 
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
