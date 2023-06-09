@@ -414,38 +414,18 @@ stop_dc_all() {
 
 # Function status container: running | stoped 
 status_dms() {
-   # check, if update.sh exists
-   if [[ -f ${CONTAINER_SAVE_PATH}/$1/update.sh ]]
-   then
-      # read docker container image from update.sh
-      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/$1/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
+   # list all containers
+   cd ${CONTAINER_SAVE_PATH}/$1/
+   ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
+   #echo "----------------"
+   #echo -e "${ar_lc[@]}\n"
+
+   # check if array is empty or not
+   if ! [ ${#ar_lc[@]} -eq 0 ]; then
+      CONTAINER_NAME=$(echo ${ar_lc[0]})
       CONTAINER_RUNNING=1
    else
-      # list all containers
-      cd ${CONTAINER_SAVE_PATH}/$1/
-      ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
-      #echo "----------------"
-      #echo -e "${ar_lc[@]}\n"
-
-      # check if array is empty or not
-      if ! [ ${#ar_lc[@]} -eq 0 ]; then
-         CONTAINER_NAME=$(echo ${ar_lc[0]})
-         CONTAINER_RUNNING=1
-      else
-         CONTAINER_RUNNING=0
-      fi
-
-#      # check: var CONTAINER_NAME is empty or not
-#      if [[ ${ar_cn[*]} =~ $(echo "\<$1\>") ]]
-#      then
-#          CONTAINER_NAME=$1
-#          CONTAINER_NAME_RES=1
-#      else
-#          print_basename "ERROR: Docker container name ${cyanf}\"$1\"${reset} does not exist!"
-#          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/$1/update.sh\"${reset}"
-#          exit 0
-#      fi
-
+      CONTAINER_RUNNING=0
    fi
 
    # status container: running | exited |not running
@@ -456,7 +436,6 @@ status_dms() {
       #print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
    fi
 }
-
 
 # Function: Update docker container
 # Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
