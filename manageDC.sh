@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.3.4"                  # Set script version
+SCRIPT_VERSION="0.4.0"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 
 #
@@ -39,6 +39,64 @@ SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
 # docker-compose
 DOCKER_COMPOSE_PATH=""
 DOCKER_COMPOSE_PATH="${DOCKER_COMPOSE_PATH:-/usr/local/bin}"
+
+# Check if at least one container is running
+NUMBER_RUNNING_CONTAINER=$(docker ps -q |wc -l)
+
+# Print script version
+print_basename "Script version is: ${cyanf}\"${SCRIPT_VERSION}\"${reset}"
+
+# Check if at least one container is running. If not, then ask to start
+if [[ ${NUMBER_RUNNING_CONTAINER} -ne 0 ]]; then
+   RES=0
+   print_basename "The number of running container(s): ${cyanf}\"${NUMBER_RUNNING_CONTAINER}\"${reset}"
+
+   #  Check if at least one microservice is running
+   NUMBER_RUNNING_MICROSERVICE=$(docker inspect $(docker ps -q) --format '{{ index .Config.Labels "com.docker.compose.project.working_dir"}}' |uniq |wc -l)
+   print_basename "The number of running docker microservice(s): ${cyanf}\"$(echo ${NUMBER_RUNNING_MICROSERVICE})\"${reset}"
+else
+   RES=1
+   print_basename "The number of running container(s): ${cyanf}\"${NUMBER_RUNNING_CONTAINER}\"${reset}"
+
+   # Search after microservice(s)
+   ar_shc=($(find /opt -maxdepth 3 -name docker-compose.yml | sed 's+/[^/]*$++' | sed 's+^.*/++' | grep -v '[^A-Za-z0-9]'))
+
+   print_basename "The script has found following docker microservice(s): ${cyanf}\"$(echo ${ar_shc[@]})\"${reset}"
+   print_basename "For the script to run correctly, at least one container must be running."
+
+   _RES=
+   until [ "$_RES" = "1" ]; do
+      print_basename "Would you like to start a docker microservice? [y/n]: "; read _ANSWER
+      case $_ANSWER in
+      y) echo -e ""; print_basename "Please enter the name of docker microservice: "; read _NAME
+         # Replace all spaces with separators
+         _STRING=$(echo ${ar_shc[@]} | tr -s ' ' '|')
+
+         # Check if entered name exists
+         if [[ ${_NAME} =~ (${_STRING}) ]]; then
+            print_basename "Entered name: ${cyanf}\"${_NAME}\"${reset}"
+
+            # determine working dir
+            W_DIR=$(find /opt -maxdepth 3 -name docker-compose.yml | sed 's+/[^/]*$++' |grep ${_NAME})
+            cd ${W_DIR} \
+            && \
+            print_basename "Launch docker microservice: ${cyanf}\"${_NAME}\"${reset}" \
+            # launch microservice
+            ${DOCKER_COMPOSE_PATH}/docker-compose up -d
+            _RES=1
+            exit 0
+         else
+            echo "The name \"${_NAME}\" does not exist. Try once again";
+         fi
+      ;;
+   n) print_basename "You do not want to start a docker microservice."; _ans=1; exit 0
+      ;;
+   *) print_basename "Please enter \"y\" or \"n\""
+      ;;
+   esac
+   done
+fi
+
 
 # container working dir
 #DEFAULT_CONTAINER_SAVE_PATH="/opt"
@@ -76,11 +134,27 @@ ar_pwd=($(docker inspect $(docker ps -q) --format '{{ index .Config.Labels "com.
 # ======= Functions =========
 # print error
 error_exit() {
-    if [[ ! -z $1 ]]
-    then
-        print_basename "$1 returned non-zero exit code: terminating"
+    if [[ ! -z $1 ]]; then
+        print_basename "$1 - returned non-zero exit code: terminating"
     fi
     exit 1
+}
+
+# Function: print success
+print_success() {
+   if [[ $? -ne 0 ]]; then
+      RES1=1
+   else
+      RES1=0
+      print_basename "$1"
+   fi
+}
+
+# Function: print error
+print_error() {
+   if [[ ${RES1} == 1 ]]; then
+      error_exit "$1"
+   fi
 }
 
 # Function print kopf
@@ -101,6 +175,17 @@ print_foot() {
    echo ""
 }
 
+# Function docker container(dc) kopf
+print_dc_update_kopf() {
+   echo "${yellowf}===================================================${reset}"
+}
+
+# Function docker container(dc) foot
+print_dc_update_foot() {
+   echo "${yellowf}---------------------------------------------------${reset}"
+}
+
+
 # Print error message in red
 f_error() {
    echo ${redf}$1${reset}
@@ -119,21 +204,21 @@ f_promtConfigYN() {
  ans=
  until [ "$ans" = "1" ]; do
     case $# in
-    3)  echo -n "$1 [$2]: "; read _answer
-        if [[ ! "$_answer" = [y,n] ]]; then
-                         echo ""; f_error "***ERROR: Please enter \"y\" or \"n\"."; echo ""
-        else
-            cmd="$3=\"$_answer\""
-            eval $cmd; ans=1
-        fi
+    3) echo -n "$1 [$2]: "; read _answer
+       if [[ ! "$_answer" = [y,n] ]]; then
+          echo ""; f_error "***ERROR: Please enter \"y\" or \"n\"."; echo ""
+       else
+          cmd="$3=\"$_answer\""
+          eval $cmd; ans=1
+       fi
     ;;
-    2)  echo -n "$1: "; read _answer
-        if [ -z "$_answer" ]; then
-            echo ""; f_error "***ERROR: the input must not be empty."; echo ""
-        else
-            cmd="$2=\"$_answer\""
-            eval $cmd; ans=1
-        fi
+    2) echo -n "$1: "; read _answer
+       if [ -z "$_answer" ]; then
+          echo ""; f_error "***ERROR: the input must not be empty."; echo ""
+       else
+          cmd="$2=\"$_answer\""
+          eval $cmd; ans=1
+       fi
     ;;
     esac
  done
@@ -172,8 +257,7 @@ start_dc() {
          f_promtConfigYN "Do you also want to start those microservices?" "y/n" "A_ANSWER"
 
          # Start all containers with shared MariaDB
-         if [ "${A_ANSWER}" = "y" ]
-         then
+         if [ "${A_ANSWER}" = "y" ]; then
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and start them
             for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
@@ -186,18 +270,13 @@ start_dc() {
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
-               if [[ $? -ne 0 ]]
-               then
-                  RES1=1
-               fi
-
+               # Print success message if RES1=0
+               print_success "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
                print_foot
-               if [[ ${RES1} == 1 ]]
-               then
-                  error_exit "'Error starting docker container'"
-                  exit 0
-               fi
-               print_basename "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+               # Print error message if RES1=1 and exit
+               print_error "Error starting docker container"
+               exit 0
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
@@ -258,8 +337,7 @@ stop_dc() {
          f_promtConfigYN "Do you also want to stop these microservices?" "y/n" "A_ANSWER"
 
          # Stop all containers with shared MariaDB
-         if [ "${A_ANSWER}" = "y" ]
-         then
+         if [ "${A_ANSWER}" = "y" ]; then
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and stop them
             for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
@@ -272,18 +350,13 @@ stop_dc() {
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
-               if [[ $? -ne 0 ]]
-               then
-                  RES1=1
-               fi
-
+               # Print success message if RES1=0
+               print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
                print_foot
-               if [[ ${RES1} == 1 ]]
-               then
-                  error_exit "'Error stopping docker microservice'"
-                  exit 0
-               fi
-               print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+               # Print error message if RES1=1 and exit
+               print_error "Error stopping docker microservice!"
+               exit 0
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
@@ -346,122 +419,135 @@ status_dms() {
    then
       # read docker container image from update.sh
       CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/$1/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
-      CONTAINER_NAME_RES=1
+      CONTAINER_RUNNING=1
    else
-      # read docker container image from docker-compose.yml
-      ar_cn=($(cat ${CONTAINER_SAVE_PATH}/$1/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //'))
+      # list all containers
+      cd ${CONTAINER_SAVE_PATH}/$1/
+      ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
+      #echo "----------------"
+      #echo -e "${ar_lc[@]}\n"
 
-      # check: var CONTAINER_NAME is empty or not
-      if [[ ${ar_cn[*]} =~ $(echo "\<$1\>") ]]
-      then
-          CONTAINER_NAME=$1
-          CONTAINER_NAME_RES=1
+      # check if array is empty or not
+      if ! [ ${#ar_lc[@]} -eq 0 ]; then
+         CONTAINER_NAME=$(echo ${ar_lc[0]})
+         CONTAINER_RUNNING=1
       else
-          print_basename "ERROR: Docker container name ${cyanf}\"$1\"${reset} does not exist!"
-          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/$1/update.sh\"${reset}"
-          exit 0
+         CONTAINER_RUNNING=0
       fi
+
+#      # check: var CONTAINER_NAME is empty or not
+#      if [[ ${ar_cn[*]} =~ $(echo "\<$1\>") ]]
+#      then
+#          CONTAINER_NAME=$1
+#          CONTAINER_NAME_RES=1
+#      else
+#          print_basename "ERROR: Docker container name ${cyanf}\"$1\"${reset} does not exist!"
+#          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/$1/update.sh\"${reset}"
+#          exit 0
+#      fi
+
    fi
 
    # status container: running | exited |not running
-   if [[ ${CONTAINER_NAME_RES} == 1 ]]
-   then
-      # check, if container is running or not
-      COUNT_CID=$(docker ps -a | grep "$CONTAINER_NAME" | wc -l)
-      if [[ ${COUNT_CID} -gt 0 ]]
-      then
-         _RES=0
-      else
-         _RES=1
-      fi
-
-      if [[ ${_RES} == 0 ]]
-      then
-         _STATUS_DMS=
-        _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
-      else
-         _STATUS_DMS="not running"
-      fi
+   if [[ ${CONTAINER_RUNNING} == 1 ]]; then
+      _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
    else
-      print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
+      _STATUS_DMS="not running"
+      #print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
    fi
 }
 
 
-# Function update docker container
+# Function: Update docker container
 # Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
 update_dc() {
    # check, if update.sh exists
-   if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh ]]
-   then
+   if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh ]]; then
       # read docker container image from update.sh
       print_basename "Script ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset} exists."
       CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
       print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
    else
-      # read docker container image from docker-compose.yml
-      #CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //' |grep "^${DOCKER_MICROSERVICE_NAME}")
-      ar_cn=($(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/docker-compose.yml |grep container_name |awk -F':' '{print $2}' |sed 's/ //'))
+      # list all containers
+      cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/
+      ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
 
-      # check: var CONTAINER_NAME is empty or not
-      if [[ ${ar_cn[*]} =~ $(echo "\<${DOCKER_MICROSERVICE_NAME}\>") ]]
-      then
-          CONTAINER_NAME=${DOCKER_MICROSERVICE_NAME}
-          print_basename "Docker container name is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
+      # check if array is empty or not
+      if ! [ ${#ar_lc[@]} -eq 0 ]; then
+         CONTAINER_NAME=$(echo ${ar_lc[0]})
+         print_basename "Docker container name is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
+         CONTAINER_RUNNING=1
       else
-          print_basename "ERROR: Docker container name ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} does not exist!"
-          print_basename "Please define Docker container name unter: ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset}"
-          exit 0
+         CONTAINER_RUNNING=0
       fi
    fi
 
    echo ${greenf}=================================================================${reset}
-   echo "  Start updating Docker Microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} am ${TIMESTAMP}"
+   echo "  Start updating Docker Microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} on ${TIMESTAMP}"
    echo ${greenf}=================================================================${reset}
-   #
-   # Get container id
-   CONTAINER_ID="$(docker ps -a --format "{{.ID}}" --filter name=^/"${CONTAINER_NAME}"$)"
+   echo "***"
 
-   # Get the image and hash of the running container
-   CONTAINER_IMAGE="$(docker inspect --format "{{.Config.Image}}" --type container ${CONTAINER_ID})"
+   # Update microservice
+   ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
+   print_basename "There are/is \"${cyanf}${#ar_lc[*]}${reset}\" docker container(s):${cyanf}  \"$(echo ${ar_lc[*]})\""${reset}
 
-   RUNNING_IMAGE="$(docker inspect --format "{{.Image}}" --type container "${CONTAINER_ID}")"
-   echo " "
-   print_basename "${greenf}Running Image:${pinkf} ${RUNNING_IMAGE} ${reset}"
-   echo " "
+   print_dc_update_kopf
+   for i in ${ar_lc[*]}; do
+      STATUS_CONTAINER=$(docker inspect -f '{{.State.Status}}' ${i})
+      printf "%-20s %-27s %1s %-5s\n" "Docker Container:" "${cyanf} $i${reset}" "-" "${bluef}${STATUS_CONTAINER}${reset}"
+   done
+   print_dc_update_foot
 
-   # Pull in latest version of the container and get the hash
-   docker pull "${CONTAINER_IMAGE}"
-   LATEST_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${CONTAINER_IMAGE}")"
-   echo " "
-   print_basename "${greenf}Latest Image:${bluef} ${LATEST_IMAGE} ${reset}"
+   for i in ${ar_lc[*]}; do
+      # Get hash of the running container (both same result)
+      IMAGE_HASH=$(docker inspect ${i} --format '{{ index .Config.Labels "com.docker.compose.image"}}')
+      RUNNING_IMAGE="$(docker inspect --format "{{.Image}}" --type container ${i})"
 
-   # Update / Exit
-   if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
-      echo " "
-      echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
-      print_basename "Update from docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is started..."
-      
-      # dc pull other images of microservice
-      cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
-      ${COMMAND} pull
+      # Get docker image and tag
+      CONTAINER_IMAGE="$(docker inspect --format "{{.Config.Image}}" --type container ${i})"
 
-      stop_dc
-      print_foot
-      start_dc
-      print_foot
-      echo " "
-      
-      # remove old images
+      echo ""
+      print_dc_update_kopf
+      echo "  Updating Docker Image ${cyanf}\"${i}\"${reset} on ${TIMESTAMP}"
+      print_dc_update_kopf
+
+      docker pull ${CONTAINER_IMAGE} 2> /dev/null
+      LATEST_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${CONTAINER_IMAGE}")"
+
+      echo "${greenf}Container name:${cyanf} ${i}${reset}"
+      echo "${greenf}Container ${cyanf}${i} ${greenf}- running image hash:${reset} ${bluef}${RUNNING_IMAGE}${reset}"
+      echo "${greenf}Container ${cyanf}${i} ${greenf}- pulled image hash:${reset}  ${redf}${LATEST_IMAGE}${reset}"
+
+      # Update / Exit
+      if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
+         echo "${redf}There is an update of docker image: ${cyanf}\"${i}\"${reset}"
+         RES=true
+      else
+         echo "${redf}There is no update of docker image: ${cyanf}\"${i}\"${reset}"
+      fi
+   done
+
+   # Restart and delete container(s)
+   if [[ "${RES}" = true ]]; then
+      echo ""
+      print_dc_update_kopf
+      echo "${greenf}  There is/are an update of docker image(s)!${reset}"
+      print_dc_update_kopf
+      echo "${greenf}  Microservice is restarting... ${reset}"
+      docker-compose down && docker-compose up -d
+      RES=
+
+      echo "${greenf} Deleting dangling images... ${reset}"
       docker rmi $(docker images -f "dangling=true" -q --no-trunc)
    else
-      echo " "
-      echo ${greenf}======================== ${cyanf}Message ${greenf}========================${reset}
-      print_basename "There is no update from docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}."
+      echo ""
+      print_kopf
+      echo "${redf}  There is/are no update of docker image(s):${cyanf}  \"$(echo ${ar_lc[*]})\""${reset}
+      print_kopf
    fi
 }
 
-# check if container is running
+# Function: check if container is running
 dc_status() {
    _DC_STATUS=$( docker ps -a -f name=${DOCKER_MICROSERVICE_NAME} | grep ${DOCKER_MICROSERVICE_NAME} 2> /dev/null )
    if [[ ! -z ${_DC_STATUS} ]]; then
@@ -472,14 +558,13 @@ dc_status() {
    fi
 }
 
-# Reorder bash array for start, if shared db exists
+# Function: Reorder bash array for start, if shared db exists
 check_shared_db_start() {
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
       print_basename "INFO: Shared DB exist!"
-      for val in ${!ar[@]}
-      do
+      for val in ${!ar[@]}; do
          index=${val}
          value=${ar[$val]}
          #echo "index = ${val} , value = ${ar[$val]}"
@@ -513,8 +598,7 @@ check_shared_db_stop() {
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
    if [ "${IN_AR}" -ge 1 ] && [ "${SHARED_MYSQL}" -ge 1 ]; then
       print_basename "INFO: Shared DB exist!"
-      for val in ${!ar[@]}
-      do
+      for val in ${!ar[@]}; do
          index=${val}
          value=${ar[$val]}
          #echo "index = ${val} , value = ${ar[$val]}"
@@ -625,11 +709,9 @@ do
                     exit 1
                 fi
                 # Check: Docker Compose Binary exists im path
-                if [[ -n "${DOCKER_COMPOSE_PATH}" ]]
-                then
+                if [[ -n "${DOCKER_COMPOSE_PATH}" ]]; then
                     #echo ${DOCKER_COMPOSE_PATH}
-                    if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
-                    then
+                    if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]; then
                         print_basename "Success: Docker-Compose binary exists."
                     else
                         print_basename "ERROR: Docker-Compose binary not found: \"${DOCKER_COMPOSE_PATH}/docker-compose\""
@@ -718,8 +800,7 @@ done
 print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
 
 # Expect to get an action command as a positional argument.
-if [[ -z $POSITIONAL_ARGS ]]
-then
+if [[ -z $POSITIONAL_ARGS ]]; then
     print_basename "Please specify an action: $(join_by , $ACTION_CMDS)"
     echo ""
     show_help
@@ -727,16 +808,12 @@ then
 fi
 
 # check docker-compose binary
-if [[ ! ${IS_CONFIG} ]]
-then
-    if [[ -n "${DOCKER_COMPOSE_PATH}" ]]
-    then
+if [[ ! ${IS_CONFIG} ]]; then
+    if [[ -n "${DOCKER_COMPOSE_PATH}" ]]; then
         #echo ${DOCKER_COMPOSE_PATH}
-        if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]
-        then
+        if [[ -f "${DOCKER_COMPOSE_PATH}/docker-compose" ]]; then
             print_basename "Docker-Compose binary exists."
-            if [[ $? -ne 0 ]]
-            then
+            if [[ $? -ne 0 ]]; then
                 print_basename "Docker-Compose binary does not exist."
                 exit 1
             fi
@@ -758,8 +835,7 @@ do
         start)
             #shift
             IS_START=1
-            if [[ ${ALL_DOCKER_CONTAINER} ]]
-            then 
+            if [[ ${ALL_DOCKER_CONTAINER} ]]; then 
                print_basename "Will start all docker microservices."
             else
                print_basename "Will start docker microservice: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
@@ -768,8 +844,7 @@ do
         stop)
             #shift
             IS_STOP=1
-            if [[ ${ALL_DOCKER_CONTAINER} ]]
-            then
+            if [[ ${ALL_DOCKER_CONTAINER} ]]; then
                print_basename "Will stop all docker microservices."
             else
                print_basename "Will stop docker microservice: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
@@ -777,8 +852,7 @@ do
             ;;
         restart)
             IS_RESTART=1
-            if [[ ${ALL_DOCKER_CONTAINER} ]]
-            then
+            if [[ ${ALL_DOCKER_CONTAINER} ]]; then
                print_basename "Will restart all docker microservices."
             else
                print_basename "Will restart docker microservice: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
@@ -786,8 +860,7 @@ do
             ;;
         update)
             IS_UPDATE=1
-            if [[ ${ALL_DOCKER_CONTAINER} ]]
-            then
+            if [[ ${ALL_DOCKER_CONTAINER} ]]; then
                print_basename "Will update all docker microservices."
             else
                print_basename "Will update docker microservice: ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
@@ -814,8 +887,7 @@ do
 done
 
 # Check: options "-n" and "-e" must not be set at the same time
-if [[ ${IS_NAME} ]] && [[ ${IS_EXCLUDE} ]]
-then
+if [[ ${IS_NAME} ]] && [[ ${IS_EXCLUDE} ]]; then
     print_basename "Error: The options \"-n\" and \"-e\" must not be set at the same time"
     print_basename "Please check your input!"
     echo -e "\n"
@@ -824,8 +896,7 @@ then
 fi
 
 # Check: options "-n" and "-a" must not be set at the same time
-if [[ ${IS_NAME} ]] && [[ ${ALL_DOCKER_CONTAINER} ]]
-then
+if [[ ${IS_NAME} ]] && [[ ${ALL_DOCKER_CONTAINER} ]]; then
     print_basename "Error: The options \"-n\" and \"-a\" must not be set at the same time"
     print_basename "Please check your input!"
     echo -e "\n"
@@ -835,8 +906,7 @@ fi
 
 
 # Check: entered "-e" but without "microservice name" or not entered "-a"
-if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
-then
+if [[ ${IS_EXCLUDE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]; then
     print_basename "Error: You have either not entered \"-e\" with a \"microservice name\" to exclude or you have not entered the \"-a\" option."
     print_basename "Please check your input!"
     echo -e "\n"
@@ -854,8 +924,7 @@ then
     AR_EXCLUDE=($(echo ${AR_EXCLUDE} |sed -e 's/,/ /g'))
 
     # Run loop for docker microservices
-    for (( j=0; j < ${#AR_EXCLUDE[@]}; j++ ))
-    do
+    for (( j=0; j < ${#AR_EXCLUDE[@]}; j++ )); do
         # Test if the name exists in array "ar"
         VAR=
         VAR=$(echo ${AR_EXCLUDE[j]})
@@ -873,16 +942,14 @@ then
     done
 
     # All microservices: loop array "ar" indexes
-    for val in ${!ar[@]}
-    do
+    for val in ${!ar[@]}; do
        index=${val}
        # echo "index: ${index}"
        value=${ar[$val]}
        # echo "value: $value"
 
        # Excluded microservice(s): loop array "AR_EXCLUDE" indexes and compare values with values of array "ar".
-       for val1 in ${!AR_EXCLUDE[@]}
-       do
+       for val1 in ${!AR_EXCLUDE[@]}; do
            index1=${val1}
            #  echo "index1: ${index1}"
            value1=${AR_EXCLUDE[$val1]}
@@ -925,17 +992,13 @@ if [[ ${IS_START} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
     start_dc
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
+    # Print success message if RES1=0
+    print_success "Starting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
 
     print_end
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error starting docker microservice'"
-    fi
-    print_basename "Starting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+    # Print error message if RES1=1
+    print_error "Error starting docker microservice"
     exit 0
 fi
 
@@ -944,17 +1007,12 @@ if [[ ${IS_STOP} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
 then
     stop_dc
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
-
+    # Print success message if RES1=0
+    print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     print_end
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error stopping docker microservice'"
-    fi
-    print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+    # Print error message if RES1=1
+    print_error
     exit 0
 fi
 
@@ -965,38 +1023,26 @@ then
     print_foot
     start_dc
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
+    # Print success message if RES1=0
+    print_success "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
 
-    # print_foot
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error restarting docker microservices!"
-    fi
     print_end
-    print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+    # Print error message if RES1=1
+    print_error "Error restarting docker microservice"
     exit 0
 fi
 
 # Update docker container
-if [[ ${IS_UPDATE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]
-then
+if [[ ${IS_UPDATE} ]] && [[ ! ${ALL_DOCKER_CONTAINER} ]]; then
+    # run update
     update_dc
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
+    # Print success message if RES1=0
+    print_success "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
 
-    print_end
-    #echo ""
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error updating docker microservice'"
-    fi
-    print_basename "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+    # Print error message if RES1=1
+    print_error "Error updating docker microservice!"
     exit 0
 fi
 
@@ -1004,8 +1050,7 @@ fi
 # format="%8s%10s%10s%14s\n"
 #printf "$format" "Dirs" "Files" "Blocks" "Directory"
 #  printf "%-20s %-27s\t %1s %-5s\n" "Docker microservice:" "${cyanf} $i${reset}" "-" "${bluef}${_STATUS_DMS}${reset}"
-if [[ ${IS_LIST} ]]
-then
+if [[ ${IS_LIST} ]]; then
     #print_basename "All docker container are being listed..."
     print_basename "All docker microservices are being listed..."
     print_kopf
@@ -1024,23 +1069,17 @@ then
        fi
     done
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
-
+    # Print success message if RES1=0
+    print_success "Listing all docker microservices done!"
     print_foot
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error listing all docker microservices'"
-    fi
-    print_basename "Listing all docker microservices done!"
+
+    # Print error message if RES1=1
+    print_error "Error listing all docker microservices!"
     exit 0
 fi
 
 # Show status of docker microservices
-if [[ ${IS_STATUS} ]]
-then
+if [[ ${IS_STATUS} ]]; then
     print_basename "Status of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being showed..."
     print_kopf
 
@@ -1048,23 +1087,17 @@ then
     echo "RUN: ${COMMAND} ps"
     ${COMMAND} ps
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
-
+    # Print success message if RES1=0
+    print_success "Showing status of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     print_foot
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error schowing status of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
-    fi
-    print_basename "Showing status of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+    # Print error message if RES1=1
+    print_error "Error schowing status of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
     exit 0
 fi
 
 # Show logs of docker container
-if [[ ${IS_LOG} ]]
-then
+if [[ ${IS_LOG} ]]; then
     print_basename "Last 1000 log lines of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} are being showed..."
     print_kopf
 
@@ -1072,26 +1105,19 @@ then
     echo "RUN: ${COMMAND} logs --tail=1000"
     ${COMMAND} logs --tail=1000
 
-    if [[ $? -ne 0 ]]
-    then
-       RES1=1
-    fi
-
+    # Print success message if RES1=0
+    print_success "Showing logs of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
     print_foot
-    if [[ ${RES1} == 1 ]]
-    then
-        error_exit "'Error schowing logs of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
-    fi
-    print_basename "Showing logs of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+
+    # Print error message if RES1=1
+    print_error "Error schowing logs of docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset}"
     exit 0
 fi
 
 # manage all docker container
-if  [[ ${ALL_DOCKER_CONTAINER} ]]
-then
+if  [[ ${ALL_DOCKER_CONTAINER} ]]; then
    # start all docker container
-   if [[ ${IS_START} ]]
-   then
+   if [[ ${IS_START} ]]; then
       # Print message
       echo -e "\n"
       print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
@@ -1106,25 +1132,19 @@ then
          #dc_status
          start_dc_all
 
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         fi
-
-         if [[ ${RES1} == 1 ]]
-         then
-            error_exit "'Error starting docker microservice'"
-         fi
-         print_basename "Sarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         # Print success message if RES1=0
+         print_success "Starting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
+
+         # Print error message if RES1=1
+         print_error "Error starting docker microservice!"
       done
       exit 0
    fi
 
    # stop all docker container
-   if [[ ${IS_STOP} ]]
-   then
+   if [[ ${IS_STOP} ]]; then
       # Print message
       echo -e "\n"
       print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
@@ -1139,26 +1159,19 @@ then
          #dc_status        
          stop_dc_all
 
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         fi
-
-         #print_foot
-         if [[ ${RES1} == 1 ]]
-         then
-            error_exit "'Error stopping docker microservice'"
-         fi
-         print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         # Print success message if RES1=0
+         print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
-         echo -e "\n"  
+         echo -e "\n"
+
+         # Print error message if RES1=1
+         print_error "Error stopping docker microservice!"
       done
       exit 0
    fi
 
    # restart all docker container
-   if [[ ${IS_RESTART} ]]
-   then
+   if [[ ${IS_RESTART} ]]; then
       # Print message
       echo -e "\n"
       print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
@@ -1173,26 +1186,17 @@ then
         #dc_status 
         stop_dc_all
 
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         else
-            RES_STOP=1
-         fi
-
-         if [[ ${RES1} == 1 ]]
-         then
-             error_exit "'Error stoping docker microservice'"
-             exit 0
-         fi
-         print_basename "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         # Print success message if RES1=0
+         print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
-         echo -e "\n"
+         echo -e "\n"         
+
+         # Print error message if RES1=1
+         print_error "Error stopping docker microservice!"
       done
 
       # Print message
-      if [[ ${RES_STOP} == 1 ]]
-      then        
+      if [[ ${RES1} == 0 ]]; then        
          print_basename "======== *** Stopping ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
          print_end
       fi
@@ -1210,40 +1214,27 @@ then
          #dc_status
          start_dc_all
 
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         else
-            RES_START=1
-         fi
-
-         if [[ ${RES1} == 1 ]]
-         then
-             error_exit "'Error starting docker microservice'"
-             exit 0
-         fi
-         print_basename "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+         # Print success message if RES1=0
+         print_success "Restarting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          print_end
          echo -e "\n"
+
+         # Print error message if RES1=1
+         print_error "Error starting docker microservice!"
       done
 
       # Print message
-      if [[ ${RES_START} == 1 ]]
-      then
+      if [[ ${RES1} == 0 ]]; then
          print_basename "======== *** Starting ${cyanf}\"all\"${reset} docker microservice done!!! *** ========"
          print_end
       fi
-
       exit 0
    fi
 
    # Update all docker container
-   if [[ ${IS_UPDATE} ]]
-   then
-      #echo -e "\n"
+   if [[ ${IS_UPDATE} ]]; then
       echo ""
       print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservice!!! *** ========"
-      #echo -e "\n"
 
       # Reorder bash array for stop, if shared db exists
       check_shared_db_stop
@@ -1254,29 +1245,17 @@ then
          #dc_status
          update_dc
 
-         if [[ $? -ne 0 ]]
-         then
-            RES1=1
-         else
-            RES_START=1
-         fi
-
-         print_foot
-         if [[ ${RES1} == 1 ]]
-         then
-             error_exit "'Error updating docker microservice'"
-         fi
-         print_basename "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-         print_end
-         #echo -e "\n"
+         # Print success message if RES1=0
+         print_success "Updating docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
          echo ""
+
+         # Print error message if RES1=1
+         print_error "Error updating docker microservice!"
       done
 
       # Print message
-      if [[ ${RES_START} == 1 ]]
-      then
+      if [[ ${RES1} == 0 ]]; then
          print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
-         print_end
       fi
 
       exit 0
