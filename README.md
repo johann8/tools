@@ -5,5 +5,5 @@
 ```bash
 cd /usr/local/bin
 wget https://raw.githubusercontent.com/johann8/tools/master/manageDC.sh
-chmod 0700 
+chmod 0700 manageDC.sh 
 ```
