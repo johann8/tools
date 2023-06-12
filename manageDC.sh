@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.4.0"                  # Set script version
+SCRIPT_VERSION="0.4.1"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 
 #
@@ -388,6 +388,7 @@ stop_dc() {
    fi
 }
 
+# Function used for: manage all docker container
 start_dc_all() {
    # start container for Option: -a
    print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
@@ -400,6 +401,7 @@ start_dc_all() {
    print_foot
 }
 
+# Function used for: manage all docker container
 stop_dc_all() {
    # stop container for Option: -a
    print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
@@ -433,35 +435,11 @@ status_dms() {
       _STATUS_DMS=$(docker inspect -f '{{.State.Status}}' ${CONTAINER_NAME})
    else
       _STATUS_DMS="not running"
-      #print_basename "ERROR: Status of docker container ${cyanf}\"$1\"${reset} could not be determined!"
    fi
 }
 
 # Function: Update docker container
-# Es gibt ein Problem, wenn kein update.sh vorhanden und microservice Name nicht gleich dem container Namen
 update_dc() {
-#   # check, if update.sh exists
-#   if [[ -f ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh ]]; then
-#      # read docker container image from update.sh
-#      print_basename "Script ${cyanf}\"${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh\"${reset} exists."
-#      CONTAINER_NAME=$(cat ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/update.sh |grep -w "^IMAGE_NAME" | awk -F'=' '{print $2}')
-#      print_basename "Docker container image is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
-#   else
-#      # list all containers
-#      cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/
-#      ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
-#
-#      # check if array is empty or not
-#      if ! [ ${#ar_lc[@]} -eq 0 ]; then
-#         CONTAINER_NAME=$(echo ${ar_lc[0]})
-#         print_basename "Docker container name is: ${cyanf}\"${CONTAINER_NAME}\"${reset}"
-#         CONTAINER_RUNNING=1
-#      else
-#         CONTAINER_RUNNING=0
-#      fi
-#   fi
-
-   # check, if update.sh exists
    # list all containers
    cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}/
    ar_lc=($(docker-compose ps |awk '{print $1}' |awk '(NR>1)'))
@@ -552,6 +530,7 @@ dc_status() {
 }
 
 # Function: Reorder bash array for start, if shared db exists
+# Used for: manage all docker container
 check_shared_db_start() {
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
@@ -586,6 +565,7 @@ check_shared_db_start() {
 }
 
 # Reorder bash array for stop, if shared db exists
+# Used for: manage all docker container
 check_shared_db_stop() {
    IN_AR=$(echo ${ar[@]} | grep -o ${DB_CONTAINER_NAME} | wc -w)
    SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
@@ -1249,6 +1229,7 @@ if  [[ ${ALL_DOCKER_CONTAINER} ]]; then
       # Print message
       if [[ ${RES1} == 0 ]]; then
          print_basename "======== *** Updating ${cyanf}\"all\"${reset} docker microservices done!!! *** ========"
+         print_end
       fi
 
       exit 0
