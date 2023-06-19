@@ -1,6 +1,6 @@
 # Tools
 
-## Install `manageDC.sh` script 
+### Install `manageDC.sh` script 
 
 ```bash
 cd /usr/local/bin
@@ -10,7 +10,7 @@ wget https://raw.githubusercontent.com/johann8/tools/master/manageDC.sh
 chmod 0700 manageDC.sh 
 ```
 
-## Install `delete_old_files.sh` script
+### Install `delete_old_files.sh` script
 The files to be deleted are located directly in the folder.
 
 ```bash
@@ -21,7 +21,7 @@ wget https://raw.githubusercontent.com/johann8/tools/master/delete_old_files.sh
 chmod 0700 delete_old_files.sh
 ```
 
-## Install `delete_old_files_subfolder.sh` script
+### Install `delete_old_files_subfolder.sh` script
 The files to be deleted are stored in several subfolders.
 
 ```bash
@@ -31,7 +31,7 @@ mv delete_old_files_subfolder.sh delete_old_files_subfolder.sh_old
 wget https://raw.githubusercontent.com/johann8/tools/master/delete_old_files_subfolder.sh
 chmod 0700 delete_old_files_subfolder.sh
 ```
-## Install `updateDMS.sh` script
+### Install `updateDMS.sh` script
 Update docker microservice(s) image 
 
 ```bash
