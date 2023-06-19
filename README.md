@@ -43,5 +43,13 @@ wget https://raw.githubusercontent.com/johann8/tools/master/updateDMS.sh
 chmod 0700 updateDMS.sh
 ```
 
+### Install `backupDMS.sh` script
 
+```bash
+cd /usr/local/bin
+if [[ -f backupDMS.sh_old ]]; then echo -n "Delete old script"; rm -rf backupDMS.sh_old; echo [ Done ]; fi
+mv backupDMS.sh backupDMS.sh_old
+wget https://raw.githubusercontent.com/johann8/tools/master/backupDMS.sh
+chmod 0700 backupDMS.sh
+```
 
