@@ -42,8 +42,9 @@ FILE_BACKUP=backup-$(echo ${TIMESTAMP}).tzst
 FILE_DELETE='*.tzst'
 
 # CUSTOM - change me
-DAYS_NUMBER=5        # Number of stored backups
-NUMBERS_ON=true      # True: All Characters; False: Only letters
+DAYS_NUMBER=5           # Number of stored backups
+NUMBERS_ON=true         # True: All Characters; False: Only letters
+SERVICE_NAME="monit"    # Monitoring service name
 
 #
 ### === Functions ===
@@ -96,6 +97,19 @@ echo ""
 print_basename "${greenf}============================================${reset}"
 print_basename " There are ${cyanf}\"${#COMPOSE_PROJECTS_NAME[*]}\"${reset} Docker Composer Project(s): ${cyanf}\"${COMPOSE_PROJECTS_NAME[*]}\"${reset}"
 print_basename "${greenf}============================================${reset}"
+echo -e "\n"
+
+# check if monitoring is running
+if systemctl is-active --quiet "${SERVICE_NAME}.service"; then
+  # check if monitoring is running
+  print_basename "Monitoring service ${cyanf}\"${SERVICE_NAME}\"${reset} is running."
+  print_basename "Stopping monitoring service ${cyanf}\"${SERVICE_NAME}\"${reset}... "
+
+  systemctl stop ${SERVICE_NAME}.service
+  RES_SERVICE=1
+else
+  print_basename "Monitoring service ${SERVICE_NAME} is not running."
+fi
 echo -e "\n\n"
 
 # Backup all Docker Composer Project(s)
@@ -144,6 +158,12 @@ for i in ${COMPOSE_PROJECTS_PATH}; do
 #       echo -e "Backup of Compose Project: ${IMAGE_NAME}\n"
 #    done
 done
+
+# Starting monitoring service
+if [[ ${RES_SERVICE=} == 1 ]]; then
+  print_basename "Starting monitoring service ${cyanf}\"${SERVICE_NAME}\"${reset}... "
+  systemctl start ${SERVICE_NAME}.service
+fi
 
 #
 ### === Delete old files ===
