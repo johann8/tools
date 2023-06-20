@@ -11,7 +11,7 @@ set -o errexit
 # CUSTOM - script
 SCRIPT_NAME='backup_docker_container'
 BASENAME="${0##*/}"
-SCRIPT_VERSION="0.1.1"
+SCRIPT_VERSION="0.1.2"
 _HOST=$(echo $(hostname) | cut -d"." -f1)
 
 # CUSTOM vars - define colors
@@ -36,10 +36,14 @@ COMPOSE_PROJECTS_PATH=$(for i in $ALLCONTAINER; do docker inspect --format '{{ i
 COMPOSE_PROJECTS_NAME=($(docker inspect $(docker ps -q) --format '{{ index .Config.Labels "com.docker.compose.project"}}' | uniq))
 
 # CUSTOM - Backup files
-BACKUPDIR="/var/backup/${_HOST}/compose_projects/${TIMESTAMP3}"
+STORAGE="/var/backup/${_HOST}/compose_projects"
+BACKUPDIR="${STORAGE}/${TIMESTAMP3}"
 FILE_BACKUP=backup-$(echo ${TIMESTAMP}).tzst
 FILE_DELETE='*.tzst'
-DAYS_NUMBER=30
+
+# CUSTOM - change me
+DAYS_NUMBER=5        # Number of stored backups
+NUMBERS_ON=true      # True: All Characters; False: Only letters
 
 #
 ### === Functions ===
@@ -92,7 +96,7 @@ echo ""
 print_basename "${greenf}============================================${reset}"
 print_basename " There are ${cyanf}\"${#COMPOSE_PROJECTS_NAME[*]}\"${reset} Docker Composer Project(s): ${cyanf}\"${COMPOSE_PROJECTS_NAME[*]}\"${reset}"
 print_basename "${greenf}============================================${reset}"
-echo ""
+echo -e "\n\n"
 
 # Backup all Docker Composer Project(s)
 for i in ${COMPOSE_PROJECTS_PATH}; do
@@ -115,7 +119,7 @@ for i in ${COMPOSE_PROJECTS_PATH}; do
     echo ""
     TIMESTAMP2=
     TIMESTAMP2=$(date +'%H:%M:%S')
-    print_basename "${TIMESTAMP2} Docker microservice(s) ${cyanf}\"${i##*/}\"${reset} is/are backed up... "
+    print_basename "${cyanf}${TIMESTAMP2}${reset} Docker microservice(s) ${cyanf}\"${i##*/}\"${reset} is/are backed up... "
     print_basename "All docker container(s) is/are stopped... "
     ${DOCKER_COMPOSE_COMMAND} down
 
@@ -127,12 +131,11 @@ for i in ${COMPOSE_PROJECTS_PATH}; do
     print_basename "All docker container(s) is/are started... "
     echo ""
     ${DOCKER_COMPOSE_COMMAND} up -d
-
-    #echo -e "\n"
-    print_basename "${TIMESTAMP2} Docker Compose Project \"${i##*/}\" is successfully backed up!"
+    TIMESTAMP2=
+    TIMESTAMP2=$(date +'%H:%M:%S')
+    print_basename "${cyanf}${TIMESTAMP2}${reset} Docker Compose Project \"${i##*/}\" is successfully backed up!"
     echo -e "\n\n"
-
-#    
+#
 #    for n in ${ar_lc[*]}; do
 #       IMAGE_NAME=${n}
 #       CONTAINER_ID=$(docker ps -qf name="${IMAGE_NAME}")
@@ -142,6 +145,61 @@ for i in ${COMPOSE_PROJECTS_PATH}; do
 #    done
 done
 
+#
+### === Delete old files ===
+#
+
+# List all folders in an array
+if [[ "${NUMBERS_ON}" = false ]]; then
+    # Only letters
+    ARRAY=($(ls ${STORAGE} | grep -v '[^A-Za-z]'))
+else
+    # All Characters
+    ARRAY=($(ls ${STORAGE}))
+fi
+
+# Delete old backups
+if [ -d ${STORAGE} ]; then
+   cd ${STORAGE}
+   print_basename "Deleting old backups... "
+   print_basename "Storage path: ${cyanf}\"$(pwd)\"${reset}"
+
+   # Number of existing backup files
+   COUNT_FOLDERS=$(echo ${#ARRAY[@]})
+
+   if [ ${COUNT_FOLDERS} -le ${DAYS_NUMBER} ]; then
+      print_basename "SKIP: There are too few backups to delete: ${cyanf}\"${COUNT_FOLDERS}\"${reset}"
+   else
+      COUNT_FOLDERS_TO_DELETE=$(ls -t | tail -n +$(expr ${DAYS_NUMBER} + 1) | wc -l);
+      print_basename "${cyanf}\"${COUNT_FOLDERS_TO_DELETE}\"${reset} old backup(s) to delete... "
+      # Only for test
+      #(ls -t | tail -n +$(expr ${DAYS_NUMBER} + 1)) | wc -l > /dev/null 2>&1
+      (ls -t | tail -n +$(expr ${DAYS_NUMBER} + 1)) | xargs rm -rf
+      RES1=$?
+
+      # Check result
+      if [ "$RES1" = "0" ]; then
+         print_basename "${cyanf}\"${COUNT_FOLDERS_TO_DELETE}\"${reset} old backup(s) was/were deleted!"
+         #print_basename "${greenf}--------------------------\"${reset}"
+      else
+         print_basename "Error: Old backups could not be deleted!"
+         exit 1
+      fi
+   fi
+else
+   print_basename "Error: The directory ${cyanf}\"${STORAGE}\" does not exist."
+   exit 1
+fi
+
+#
+### === Show backups of microservice(s) ===
+#
+echo -e "\n\n"
+print_basename "${greenf}======= ${cyanf}Show backups of microservice(s) ${greenf}=======${reset}"
+tree -iFrh ${STORAGE}
+
+#
+echo -e "\n\n"
 print_basename "${greenf}+-----------------------------------------------------------------+${reset}"
 print_basename "${greenf}|${reset}   ${TIMESTAMP1} Backup for Compose Projects completed!    ${greenf}|${reset}"
 print_basename "${greenf}+-----------------------------------------------------------------+${reset}"
