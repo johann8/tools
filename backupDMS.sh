@@ -160,7 +160,7 @@ for i in ${COMPOSE_PROJECTS_PATH}; do
 done
 
 # Starting monitoring service
-if [[ ${RES_SERVICE=} == 1 ]]; then
+if [[ ${RES_SERVICE} == 1 ]]; then
   print_basename "Starting monitoring service ${cyanf}\"${SERVICE_NAME}\"${reset}... "
   systemctl start ${SERVICE_NAME}.service
 fi
