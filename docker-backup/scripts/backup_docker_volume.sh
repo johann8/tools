@@ -20,7 +20,7 @@ boldon="${esc}[1m"; boldoff="${esc}[22m"
 reset="${esc}[0m"
 
 # CUSTOM - script
-SCRIPT_NAME="backupDCV.sh"         # DCV - docker container volume
+SCRIPT_NAME="backupDCV.sh"                      # DCV - docker container volume
 BASENAME=${SCRIPT_NAME}
 SCRIPT_VERSION="0.1.3"
 
@@ -28,9 +28,9 @@ SCRIPT_VERSION="0.1.3"
 TIMESTAMP=$(date +%F_%H-%M)
 TIMESTAMP1=$(date "+%Y-%m-%d %H:%M:%S")
 BACKUP_PATH=/tmp/${TIMESTAMP}
-FILE_EXTENSION=tar.zstd                # Valid: tzst | tar.zst | tar.zstd | tgz | tar.gz | tbz2 | tar.bz2
+FILE_EXTENSION=tar.zstd                         # Valid: tzst | tar.zst | tar.zstd | tgz | tar.gz | tbz2 | tar.bz2
 IMAGE_NAME="johann8/dcbackup"
-#CONTAINER_ID=$(docker ps -q)
+TAR_OPTIONS="--exclude=/opt/bacula/archive/*"   # Bacula storage folder
 
 #
 ### === Functions ===
@@ -94,10 +94,9 @@ for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; d
    docker run --rm --userns=host \
    --volumes-from ${CONTAINER_NAME} \
    -v ${BACKUP_PATH}:/backup \
-   -e TAR_OPTS="$tar_opts" \
+   -e TAR_OPTS="${TAR_OPTIONS}" \
    johann8/dcbackup:latest \
    backup "${CONTAINER_NAME}/${CONTAINER_NAME}-volume.backup.${FILE_EXTENSION}"
-   #echo "[ DONE] "
    echo ""
 done
 
