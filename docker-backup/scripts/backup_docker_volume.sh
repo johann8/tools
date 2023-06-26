@@ -7,7 +7,7 @@
 #
 # Script argument - make volume backup entered docker container
 # You must enter the Container ID
-# Container IDs must be separated from each other with a space character
+# Container IDs must be separated from each other with a space character: ./scipt.sh ContainerID1 ContainerID2 ContainerID3
 
 #
 ### === Set Variables ===
@@ -22,15 +22,16 @@ reset="${esc}[0m"
 # CUSTOM - script
 SCRIPT_NAME="backupDCV.sh"                      # DCV - docker container volume
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.4"
+SCRIPT_VERSION="0.1.5"
 
 # CUSTOM - vars
 TIMESTAMP=$(date +%F_%H-%M)
 TIMESTAMP1=$(date "+%Y-%m-%d %H:%M:%S")
-BACKUP_PATH=/tmp/${TIMESTAMP}
-FILE_EXTENSION=tar.zstd                         # Valid: tzst | tar.zst | tar.zstd | tgz | tar.gz | tbz2 | tar.bz2
+BACKUP_PATH=/mnt/NFS_PBS01/docker/volume-backup/${TIMESTAMP}
+FILE_EXTENSION=tgz                              # Valid: tzst | tar.zst | tar.zstd | tgz | tar.gz | tbz2 | tar.bz2
 IMAGE_NAME="johann8/dcbackup"
 TAR_OPTIONS="--exclude=/opt/bacula/archive/*"   # Bacula storage folder
+
 
 # CUSTOM - logs
 FILE_LAST_LOG='/tmp/'${SCRIPT_NAME}'.log'
@@ -45,6 +46,9 @@ VAR_EMAILDATE=$(date '+%a, %d %b %Y %H:%M:%S (%Z)')
 
 # CUSTOM - Mail-Recipient.
 MAIL_RECIPIENT='you@example.com'
+
+# CUSTOM - Days number of stored backups
+BACKUP_DAYS=7
 
 #
 ### === Functions ===
@@ -94,7 +98,7 @@ else
    CONTAINER_ID=$(echo $@)
 fi
 
-# check if docker image loaded and up to date
+### check if docker image loaded and up to date
 echo -e "\n"
 print_basename "Script version is: ${cyanf}\"${SCRIPT_VERSION}\"${reset}" 2>&1 | tee  ${FILE_LAST_LOG}
 docker images -a |grep ${IMAGE_NAME}
@@ -123,12 +127,13 @@ else
    docker pull ${IMAGE_NAME}
 fi
 
+# print start message
 echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
 print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
 print_basename "${greenf}|${reset} Start docker volume backup on host: ${cyanf}\"$(hostname -f)\"${reset} at ${cyanf}\"${TIMESTAMP1}\"${reset} ${greenf}|${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
 print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}\n" 2>&1 | tee -a ${FILE_LAST_LOG}
 
-# Create docker volume backup
+### Create docker volume backup
 (
 for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; do
    echo ""
@@ -145,8 +150,41 @@ for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; d
 done
 ) 2>&1 | tee -a ${FILE_LAST_LOG}
 
-# Send status e-mail
+
+### find old files and delete
+print_basename "Searching for old folder(s) started..." 2>&1 | tee -a ${FILE_LAST_LOG}
+COUNT=$(find ${BACKUP_PATH%/*} -maxdepth 1 -type d -mtime +${BACKUP_DAYS} |wc -l)
+(
+if [ "${COUNT}" != 0 ]; then
+   print_basename "\"${COUNT}\" old folder(s) will be deleted..."
+   find ${BACKUP_PATH%/*} -maxdepth 1 -type d -mtime +${BACKUP_DAYS} -exec rm -rf "{}" \;
+   #print_basename "Deleting empty folders..."
+   #find /var/backup/container/ -empty -type d -delete
+   echo " "
+else
+   print_basename "No old folder(s) were found."
+   echo " "
+fi
+) 2>&1 | tee -a ${FILE_LAST_LOG}
+
+
+### show backups
+# show last backup of docker container volume
+(
+print_basename "======= Schow last backup of docker container volume(s) ======="
+tree -iFrh ${BACKUP_PATH} | grep -v /$
+echo " "
+)  2>&1 | tee -a ${FILE_LAST_LOG}
+
+# show all backup Directories
+(
+print_basename "======= Schow all backup directories  ======="
+tree -d -L 1 ${BACKUP_PATH%/*}
+) 2>&1 | tee -a ${FILE_LAST_LOG}
+
+
+### Send status e-mail
 if [ ${MAIL_STATUS} = 'Y' ]; then
-        sendmail STATUS
+   sendmail STATUS
 fi
 
