@@ -50,9 +50,9 @@
 # >>> Please edit following lines for personal settings and custom usages. ! #
 ##############################################################################
 
-VOLGROUP=deb_3cx                                             # name of the volume group
-ORIGVOL=var                                                  # name of the logical volume to backup
-SNAPVOL=var_snap                                             # name of the snapshot to create
+VOLGROUP=ol                                                  # lvdisplay: name of the volume group
+ORIGVOL=opt                                                  # lvdisplay: name of the logical volume to backup
+SNAPVOL=opt_snap                                             # name of the snapshot to create
 SNAPSIZE=5G                                                  # space to allocate for the snapshot in the volume group
 BASENAME="${0##*/}"
 SCRIPTDIR="${0%/*}"
@@ -79,24 +79,21 @@ echo "Started at: ${_DATUM}" >>  ${LOGFILE}
 echo " " >>  ${LOGFILE}
 
 # only run as root
-if [ "$(id -u)" != '0' ]
-then
-        echo "this script has to be run as root" >>  ${LOGFILE}
-        exit 1
+if [ "$(id -u)" != '0' ]; then
+   echo "this script has to be run as root" >>  ${LOGFILE}
+   exit 1
 fi
 
 # check that the snapshot does not already exist
-if [ -e "/dev/${VOLGROUP}/${SNAPVOL}" ]
-then
-        echo "the lvm snapshot already exists, please destroy it by hand first" >>  ${LOGFILE}
-        exit 1
+if [ -e "/dev/${VOLGROUP}/${SNAPVOL}" ]; then
+   echo "the lvm snapshot already exists, please destroy it by hand first" >>  ${LOGFILE}
+   exit 1
 fi
 
 # create the lvm snapshot
-if ! /usr/sbin/lvcreate -L${SNAPSIZE} -s -n ${SNAPVOL} /dev/${VOLGROUP}/${ORIGVOL}  >/dev/null 2>&1
-then
-        echo "creation of the lvm snapshot failed" >>  ${LOGFILE}
-        exit 1
+if ! /usr/sbin/lvcreate -L${SNAPSIZE} -s -n ${SNAPVOL} /dev/${VOLGROUP}/${ORIGVOL}  >/dev/null 2>&1; then
+   echo "creation of the lvm snapshot failed" >>  ${LOGFILE}
+   exit 1
 fi
 
 # check that the mount point does not already exist, mount snapshot
@@ -136,14 +133,13 @@ if ! [ -f ${SCRIPTDIR}/tar_exclude_var.txt ]; then
    echo 'lost+found' >> ${SCRIPTDIR}/tar_exclude_var.txt
 fi
 
-if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${ORIGVOL}
-then
-        echo "Created TAR archive: ${BACKUPDIR}/${BACKUPNAME}" >>  ${LOGFILE}
-        md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
-        RES=0
+if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${ORIGVOL}; then
+   echo "Created TAR archive: ${BACKUPDIR}/${BACKUPNAME}" >>  ${LOGFILE}
+   # md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
+   RES=0
 else
-        echo "Error: Create TAR archive failed." >>  ${LOGFILE}
-        RES=1
+   echo "Error: Create TAR archive failed." >>  ${LOGFILE}
+   RES=1
 
 ##      exit (1);  # don't remove the snapshot just yet
                    # perhaps we will want to try again ?
@@ -155,13 +151,12 @@ then
   umount ${MOUNTDIR}/${ORIGVOL}
 
   # remove snapshot
-  if ! /usr/sbin/lvremove -f /dev/${VOLGROUP}/${SNAPVOL} >/dev/null 2>&1
-  then
-        echo "cannot remove the lvm snapshot: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
-        RES=1
+  if ! /usr/sbin/lvremove -f /dev/${VOLGROUP}/${SNAPVOL} >/dev/null 2>&1; then
+     echo "cannot remove the lvm snapshot: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
+     RES=1
   else
-        echo "lvm snapshot removed: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
-        RES=0
+     echo "lvm snapshot removed: /dev/${VOLGROUP}/${SNAPVOL}" >>  ${LOGFILE}
+     RES=0
   fi
 
 fi
@@ -173,7 +168,7 @@ COUNT=$(find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUPFILES_DELETE} |w
 if [ "${COUNT}" != 0 ]; then
    echo "${COUNT} old files will be deleted..." >>  ${LOGFILE}
    find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUPFILES_DELETE} -delete >>  ${LOGFILE}
-   find ${SEARCHDIR} -type f -name "*.md5" -mtime +${BACKUPFILES_DELETE} -delete >>  ${LOGFILE}
+   #find ${SEARCHDIR} -type f -name "*.md5" -mtime +${BACKUPFILES_DELETE} -delete >>  ${LOGFILE}
    echo "Deleting empty folders..." >>  ${LOGFILE}
    find /var/backup/container/ -empty -type d -delete
 else
