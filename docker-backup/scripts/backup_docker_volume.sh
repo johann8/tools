@@ -22,7 +22,7 @@ reset="${esc}[0m"
 # CUSTOM - script
 SCRIPT_NAME="backupDCV.sh"                      # DCV - docker container volume
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.3"
+SCRIPT_VERSION="0.1.4"
 
 # CUSTOM - vars
 TIMESTAMP=$(date +%F_%H-%M)
@@ -32,13 +32,54 @@ FILE_EXTENSION=tar.zstd                         # Valid: tzst | tar.zst | tar.zs
 IMAGE_NAME="johann8/dcbackup"
 TAR_OPTIONS="--exclude=/opt/bacula/archive/*"   # Bacula storage folder
 
+# CUSTOM - logs
+FILE_LAST_LOG='/tmp/'${SCRIPT_NAME}'.log'
+FILE_MAIL='/tmp/'${SCRIPT_NAME}'.mail'
+
+# CUSTOM - Send mail
+MAIL_STATUS='Y'                                 # Send Status-Mail [Y|N]
+PROG_SENDMAIL='/sbin/sendmail'
+VAR_HOSTNAME=$(uname -n)
+VAR_SENDER='root@'${VAR_HOSTNAME}
+VAR_EMAILDATE=$(date '+%a, %d %b %Y %H:%M:%S (%Z)')
+
+# CUSTOM - Mail-Recipient.
+MAIL_RECIPIENT='you@example.com'
+
 #
 ### === Functions ===
 #
 
+# Function: print script name
 print_basename() {
    echo -e "${pinkf}${BASENAME}:${reset} $1"
 }
+
+# Function: send mail
+function sendmail() {
+     case "$1" in
+     'STATUS')
+               MAIL_SUBJECT='Status execution '${SCRIPT_NAME}' script.'
+              ;;
+            *)
+               MAIL_SUBJECT='ERROR while execution '${SCRIPT_NAME}' script !!!'
+               ;;
+     esac
+
+cat <<EOF >$FILE_MAIL
+Subject: $MAIL_SUBJECT
+Date: $VAR_EMAILDATE
+From: $VAR_SENDER
+To: $MAIL_RECIPIENT
+EOF
+
+# sed: Remove color and move sequences
+echo -e "\n" >> $FILE_MAIL
+cat $FILE_LAST_LOG | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $FILE_MAIL
+${PROG_SENDMAIL} -f ${VAR_SENDER} -t ${MAIL_RECIPIENT} < ${FILE_MAIL}
+rm -f ${FILE_MAIL}
+}
+
 
 #
 ### ============= Main script ============
@@ -55,9 +96,10 @@ fi
 
 # check if docker image loaded and up to date
 echo -e "\n"
+print_basename "Script version is: ${cyanf}\"${SCRIPT_VERSION}\"${reset}" 2>&1 | tee  ${FILE_LAST_LOG}
 docker images -a |grep ${IMAGE_NAME}
 if [ $? == 0 ]; then
-   print_basename "There is a docker image ${cyanf}\"${IMAGE_NAME}\"${reset}"
+   print_basename "There is a docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
 
    # check if image is recent
    RUNNING_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${IMAGE_NAME}")"
@@ -65,27 +107,29 @@ if [ $? == 0 ]; then
    LATEST_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${IMAGE_NAME}")"
 
    if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
-      print_basename "There is a more recent docker image ${cyanf}\"${IMAGE_NAME}\"${reset}"
-      print_basename "Removing old image ${cyanf}\"${IMAGE_NAME}\"${reset}... "
+      print_basename "There is a more recent docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "Removing old image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
       docker rmi ${IMAGE_NAME}
-      print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... "
-      echo ""
+      print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
+      echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
       docker pull ${IMAGE_NAME}
    else
-      echo ""
-      print_basename "The docker image ${cyanf}\"${IMAGE_NAME}\"${reset} is up to date."
+      #echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "The docker image ${cyanf}\"${IMAGE_NAME}\"${reset} is up to date." 2>&1 | tee -a ${FILE_LAST_LOG}
    fi
 else
-   print_basename "There is no docker image ${cyanf}\"${IMAGE_NAME}\"${reset}"
-   print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... "
+   print_basename "There is no docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
+   print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
    docker pull ${IMAGE_NAME}
 fi
 
-echo ""
-print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}"
-print_basename "${greenf}|${reset} Start docker volume backup on host: ${cyanf}\"$(hostname -f)\"${reset} at ${cyanf}\"${TIMESTAMP1}\"${reset} ${greenf}|${reset}"
-print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}\n"
+echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "${greenf}|${reset} Start docker volume backup on host: ${cyanf}\"$(hostname -f)\"${reset} at ${cyanf}\"${TIMESTAMP1}\"${reset} ${greenf}|${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}\n" 2>&1 | tee -a ${FILE_LAST_LOG}
 
+# Create docker volume backup
+(
 for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; do
    echo ""
    CONTAINER_NAME=$i
@@ -99,4 +143,10 @@ for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; d
    backup "${CONTAINER_NAME}/${CONTAINER_NAME}-volume.backup.${FILE_EXTENSION}"
    echo ""
 done
+) 2>&1 | tee -a ${FILE_LAST_LOG}
+
+# Send status e-mail
+if [ ${MAIL_STATUS} = 'Y' ]; then
+        sendmail STATUS
+fi
 
