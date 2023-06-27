@@ -13,24 +13,18 @@
 ### === Set Variables ===
 #
 
-# CUSTOM vars - define colors
-esc=""
-bluef="${esc}[34m"; redf="${esc}[31m"; yellowf="${esc}[33m"; greenf="${esc}[32m"; cyanf="${esc}[36m"; pinkf="${esc}[35m"; xxxf="${esc}[1;32m"
-boldon="${esc}[1m"; boldoff="${esc}[22m"
-reset="${esc}[0m"
-
 # CUSTOM - script
 SCRIPT_NAME="backupDCV.sh"                      # DCV - docker container volume
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.5"
+SCRIPT_VERSION="0.1.6"
 
 # CUSTOM - vars
 TIMESTAMP=$(date +%F_%H-%M)
 TIMESTAMP1=$(date "+%Y-%m-%d %H:%M:%S")
-BACKUP_PATH=/mnt/NFS_PBS01/docker/volume-backup/${TIMESTAMP}
+BACKUP_PATH=/mnt/NFS_PBS01/docker/$(hostname -s)/volume-backup/${TIMESTAMP}
 FILE_EXTENSION=tgz                              # Valid: tzst | tar.zst | tar.zstd | tgz | tar.gz | tbz2 | tar.bz2
 IMAGE_NAME="johann8/dcbackup"
-TAR_OPTIONS="--exclude=/opt/bacula/archive/*"   # Bacula storage folder
+TAR_OPTIONS="--exclude=/opt/bacula/archive/*"   # Bacula storage folder as example
 
 
 # CUSTOM - logs
@@ -56,7 +50,7 @@ BACKUP_DAYS=7
 
 # Function: print script name
 print_basename() {
-   echo -e "${pinkf}${BASENAME}:${reset} $1"
+   echo -e "${BASENAME}: $1"
 }
 
 # Function: send mail
@@ -79,7 +73,7 @@ EOF
 
 # sed: Remove color and move sequences
 echo -e "\n" >> $FILE_MAIL
-cat $FILE_LAST_LOG | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $FILE_MAIL
+cat $FILE_LAST_LOG  >> $FILE_MAIL
 ${PROG_SENDMAIL} -f ${VAR_SENDER} -t ${MAIL_RECIPIENT} < ${FILE_MAIL}
 rm -f ${FILE_MAIL}
 }
@@ -100,10 +94,10 @@ fi
 
 ### check if docker image loaded and up to date
 echo -e "\n"
-print_basename "Script version is: ${cyanf}\"${SCRIPT_VERSION}\"${reset}" 2>&1 | tee  ${FILE_LAST_LOG}
+print_basename "Script version is: \"${SCRIPT_VERSION}\"" 2>&1 | tee  ${FILE_LAST_LOG}
 docker images -a |grep ${IMAGE_NAME}
 if [ $? == 0 ]; then
-   print_basename "There is a docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
+   print_basename "There is a docker image \"${IMAGE_NAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 
    # check if image is recent
    RUNNING_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${IMAGE_NAME}")"
@@ -111,44 +105,47 @@ if [ $? == 0 ]; then
    LATEST_IMAGE="$(docker inspect --format "{{.Id}}" --type image "${IMAGE_NAME}")"
 
    if ! [ ${RUNNING_IMAGE} = ${LATEST_IMAGE} ]; then
-      print_basename "There is a more recent docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
-      print_basename "Removing old image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "There is a more recent docker image \"${IMAGE_NAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "Removing old image \"${IMAGE_NAME}\"... " 2>&1 | tee -a ${FILE_LAST_LOG}
       docker rmi ${IMAGE_NAME}
-      print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "Downloading image \"${IMAGE_NAME}\"... " 2>&1 | tee -a ${FILE_LAST_LOG}
       echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
       docker pull ${IMAGE_NAME}
    else
       #echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
-      print_basename "The docker image ${cyanf}\"${IMAGE_NAME}\"${reset} is up to date." 2>&1 | tee -a ${FILE_LAST_LOG}
+      print_basename "The docker image \"${IMAGE_NAME}\" is up to date." 2>&1 | tee -a ${FILE_LAST_LOG}
    fi
 else
-   print_basename "There is no docker image ${cyanf}\"${IMAGE_NAME}\"${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
-   print_basename "Downloading image ${cyanf}\"${IMAGE_NAME}\"${reset}... " 2>&1 | tee -a ${FILE_LAST_LOG}
+   print_basename "There is no docker image \"${IMAGE_NAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
+   print_basename "Downloading image \"${IMAGE_NAME}\"... " 2>&1 | tee -a ${FILE_LAST_LOG}
    docker pull ${IMAGE_NAME}
 fi
 
 # print start message
 echo "" 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "${greenf}|${reset} Start docker volume backup on host: ${cyanf}\"$(hostname -f)\"${reset} at ${cyanf}\"${TIMESTAMP1}\"${reset} ${greenf}|${reset}" 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "${greenf}+------------------------------------------------------------------------------------------+${reset}\n" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "+------------------------------------------------------------------------------------------+" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "| Start docker volume backup on host: \"$(hostname -f)\" at \"${TIMESTAMP1}\" |" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "+------------------------------------------------------------------------------------------+" 2>&1 | tee -a ${FILE_LAST_LOG}
 
 ### Create docker volume backup
-(
 for i in `docker inspect --format='{{.Name}}' ${CONTAINER_ID} | cut -f2 -d\/`; do
-   echo ""
+   echo " " 2>&1 | tee -a ${FILE_LAST_LOG}
    CONTAINER_NAME=$i
    mkdir -p ${BACKUP_PATH}/${CONTAINER_NAME}
-   echo -n "${cyanf}\"${CONTAINER_NAME}\"${reset} - "
+   print_basename "|---------- Backing up volumes of container \"${CONTAINER_NAME}\" ----------|" 2>&1 | tee -a ${FILE_LAST_LOG}
+
+   (
+   echo -n -e "\"${CONTAINER_NAME}\" - "
    docker run --rm --userns=host \
    --volumes-from ${CONTAINER_NAME} \
    -v ${BACKUP_PATH}:/backup \
    -e TAR_OPTS="${TAR_OPTIONS}" \
    johann8/dcbackup:latest \
    backup "${CONTAINER_NAME}/${CONTAINER_NAME}-volume.backup.${FILE_EXTENSION}"
-   echo ""
+   ) 2>&1 | tee -a ${FILE_LAST_LOG}
+
+   echo " " 2>&1 | tee -a ${FILE_LAST_LOG}
 done
-) 2>&1 | tee -a ${FILE_LAST_LOG}
 
 
 ### find old files and delete
@@ -172,14 +169,14 @@ fi
 # show last backup of docker container volume
 (
 print_basename "======= Schow last backup of docker container volume(s) ======="
-tree -iFrh ${BACKUP_PATH} | grep -v /$
+tree -iFrh ${BACKUP_PATH} | grep -v /$ | sed '/director/d'
 echo " "
 )  2>&1 | tee -a ${FILE_LAST_LOG}
 
 # show all backup Directories
 (
 print_basename "======= Schow all backup directories  ======="
-tree -d -L 1 ${BACKUP_PATH%/*}
+tree -i -d -L 1 ${BACKUP_PATH%/*} | sed '/director/d'
 ) 2>&1 | tee -a ${FILE_LAST_LOG}
 
 
