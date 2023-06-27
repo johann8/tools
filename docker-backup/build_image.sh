@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set variables
-_VERSION=0.1.3
+_VERSION=0.1.4
 
 # create build
 docker build -t johann8/dcbackup:${_VERSION} .
