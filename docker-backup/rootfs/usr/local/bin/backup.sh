@@ -14,13 +14,7 @@
 # CUSTOM - script
 SCRIPT_NAME="backupDCV.sh"         # DCV - docker container volume
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.35"
-
-# CUSTOM vars - define colors
-esc=""
-bluef="${esc}[34m"; redf="${esc}[31m"; yellowf="${esc}[33m"; greenf="${esc}[32m"; cyanf="${esc}[36m"; pinkf="${esc}[35m"; xxxf="${esc}[1;32m"
-boldon="${esc}[1m"; boldoff="${esc}[22m"
-reset="${esc}[0m"
+SCRIPT_VERSION="0.1.4"
 
 # CUSTOM - var FILE
 FILE="backup.tzst"
@@ -36,7 +30,7 @@ FILE_EXTENSION=$(echo ${FILE##*.})
 #
 
 print_basename() {
-   echo -e "${pinkf}${BASENAME}:${reset} $1"
+   echo -e "${BASENAME}: $1"
 }
 
 
@@ -59,7 +53,7 @@ if [ "$1" = "backup" ]; then
       exit 1
    fi
 
-   print_basename "Volumes detected: ${cyanf}\"${VOLUMES}\"${reset}"
+   print_basename "Volumes detected: \"${VOLUMES}\""
    print_basename "Creating archive..."
 
    case "$2" in
@@ -84,14 +78,14 @@ if [ "$1" = "backup" ]; then
       *.bz2) # COMPRESS=bzip2
              tar -cjf "${FILE}" ${TAR_OPTS} --one-file-system ${VOLUMES} > /dev/null 2>&1
              ;;
-          *) print_basename "Unknown file extension: ${cyanf}\"${FILE_EXTENSION}\"${reset}"
+          *) print_basename "Unknown file extension: \"${FILE_EXTENSION}\""
              ;;
    esac
 
-   print_basename "Written to ${cyanf}\"${FILE}\"${reset}"
+   print_basename "Written to \"${FILE}\""
 
 elif [ "$1" = "restore" ]; then
-   print_basename "Restoring from ${cyanf}\"${FILE}\"${reset}"
+   print_basename "Restoring from \"${FILE}\""
 
    case "${2}" in
      *.tzst) # COMPRESS=zstd
@@ -115,7 +109,7 @@ elif [ "$1" = "restore" ]; then
       *.bz2) # COMPRESS=bzip2
              tar -xjf "${FILE}" --preserve-permissions ${TAR_OPTS} -C / > /dev/null 2>&1
              ;;
-          *) print_basename "Unknown file extension: ${cyanf}\"${FILE_EXTENSION}\"${reset}"
+          *) print_basename "Unknown file extension: \"${FILE_EXTENSION}\""
              ;;
    esac
 fi
