@@ -59,7 +59,7 @@ SNAPSIZE=5G                                                  # space to allocate
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"                                   # LVS - logical volume snapshot
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.3"
+SCRIPT_VERSION="0.1.4"
 #BASENAME="${0##*/}"
 SCRIPTDIR="${0%/*}"
 BACKUPDIR="/mnt/NAS_BareOS/docker/$(hostname -s)/lvm-snapshot/$(date "+%Y-%m-%d")"  # where to put the backup
@@ -70,7 +70,7 @@ TAR_EXCLUDE_VAR="--exclude-from=${SCRIPTDIR}/tar_exclude_var.txt"  # Files to be
 MOUNTDIR="/mnt/lvm_snap"
 SEARCHDIR="${BACKUPDIR%/*}"
 LOGFILE="/var/log/container_backup.log"
-BACKUPFILES_DELETE=6                                                # Number of backup files
+BACKUP_DAYS=6                                                      # Number of backup files
 
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -184,12 +184,12 @@ fi
 
 # find old files and delete
 print_basename "Searching for old backups started..." | tee -a ${LOGFILE}
-COUNT=$(find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUPFILES_DELETE} |wc -l)
+COUNT=$(find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUP_DAYS} |wc -l)
 
 if [ "${COUNT}" != 0 ]; then
    print_basename "\"${COUNT}\" old backups will be deleted..." | tee -a ${LOGFILE}
-   find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUPFILES_DELETE} -delete >> ${LOGFILE}
-   #find ${SEARCHDIR} -type f -name "*.md5" -mtime +${BACKUPFILES_DELETE} -delete >>  ${LOGFILE}
+   find ${SEARCHDIR} -type f -name "*.tgz" -mtime +${BACKUP_DAYS} -delete >> ${LOGFILE}
+   #find ${SEARCHDIR} -type f -name "*.md5" -mtime +${BACKUP_DAYS} -delete >>  ${LOGFILE}
    print_basename "Deleting empty folders..." | tee -a ${LOGFILE}
    find ${SEARCHDIR} -empty -type d -delete
 else
