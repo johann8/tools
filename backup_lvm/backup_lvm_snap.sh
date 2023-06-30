@@ -126,9 +126,9 @@ rm -f ${FILE_MAIL}
 echo -e "\n" 2>&1 | tee ${FILE_LAST_LOG}
 print_basename "Script version is: \"${SCRIPT_VERSION}\"" 2>&1 | tee ${FILE_LAST_LOG}
 print_basename "Datum: $(date "+%Y-%m-%d")" 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "============================" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "===========================" 2>&1 | tee -a ${FILE_LAST_LOG}
 print_basename " Run backup of LV snapshot" 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "============================" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "===========================" 2>&1 | tee -a ${FILE_LAST_LOG}
 print_basename "Started on \"$(hostname -f)\" at \"${_DATUM}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 echo " " 2>&1 | tee -a ${FILE_LAST_LOG}
 
@@ -231,13 +231,23 @@ else
 fi
 
 # show all folders
-echo " " 2>&1 | tee -a ${FILE_LAST_LOG}
-print_basename "======= Show all backup directories  =======" 2>&1 | tee -a ${FILE_LAST_LOG}
+(
+echo " "
+print_basename "======= Show all backup directories  ======="
 tree -i -d -L 1 ${SEARCHDIR} | sed '/director/d'
+) 2>&1 | tee -a ${FILE_LAST_LOG}
 
+# print "end of script"
 print_basename "/------------ End of script ------------/" 2>&1 | tee -a ${FILE_LAST_LOG}
-echo " " | tee -a ${FILE_LAST_LOG} 2>&1 | tee -a ${FILE_LAST_LOG}
+
+### Send status e-mail
+if [ ${MAIL_STATUS} = 'Y' ]; then
+   print_basename "Sending staus mail... " 2>&1 | tee -a ${FILE_LAST_LOG}
+   sendmail STATUS
+fi
+
 exit ${RES}
+
 
 # Examples without variables
 #
