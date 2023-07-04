@@ -46,7 +46,7 @@ SNAPSIZE=5G                                                  # space to allocate
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"                                   # LVS - logical volume snapshot
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.1.5"
+SCRIPT_VERSION="0.1.6"
 
 # CUSTOM - vars
 #BASENAME="${0##*/}"
@@ -170,7 +170,7 @@ if [ "${FS_XFS}" = "xfs" ]; then
    mount ${MOUNT_OPTIONS} /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
    RES=$?
 
-   if [ "$RES" != '0']; then
+   if [ "$RES" != '0' ]; then
       print_basename "Cannot mount LV snapshot: /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
       exit 1
    fi
@@ -180,7 +180,7 @@ else
    mount /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
    RES=$?
 
-   if [ "$RES" != '0']; then
+   if [ "$RES" != '0' ]; then
       print_basename "Cannot mount LV snapshot: /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
       exit 1
    fi
