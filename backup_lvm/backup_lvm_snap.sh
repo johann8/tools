@@ -58,6 +58,7 @@ BACKUPNAME="${ORIGVOL}_${TIMESTAMP}.tgz"                           # name of the
 TAR_EXCLUDE_VAR="--exclude-from=${SCRIPTDIR}/tar_exclude_var.txt"  # Files to be excluded from tar archive
 MOUNTDIR="/mnt/lvm_snap"
 SEARCHDIR="${BACKUPDIR%/*}"
+MOUNT_OPTIONS="-o nouuid"                                          # For xfs FS    
 
 
 # CUSTOM - logs
@@ -153,9 +154,27 @@ fi
 
 # check that the mount point does not already exist, mount snapshot
 if ! [ -d ${MOUNTDIR}/${ORIGVOL} ]; then
-   print_basename "Creating mount point... ${MOUNTDIR}/${ORIGVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
+   # create mount point
+   print_basename "Creating mount point... \"${MOUNTDIR}/${ORIGVOL}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
    mkdir -p ${MOUNTDIR}/${ORIGVOL}
+else
+   print_basename "Mount point exists: \"${MOUNTDIR}/${ORIGVOL}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
+fi
 
+# check if FS ist XFS
+FS_XFS=$(df -hT |grep -w '/opt' |awk '{print $2}')
+
+if [ "${FS_XFS}" = "xfs" ]; then
+   # mount snapshot
+   print_basename "Mounting LV snapshot... /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
+   mount ${MOUNT_OPTIONS} /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
+   RES=$?
+
+   if [ "$RES" != '0']; then
+      print_basename "Cannot mount LV snapshot: /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
+      exit 1
+   fi
+else
    # mount snapshot
    print_basename "Mounting LV snapshot... /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
    mount /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
@@ -165,20 +184,10 @@ if ! [ -d ${MOUNTDIR}/${ORIGVOL} ]; then
       print_basename "Cannot mount LV snapshot: /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
       exit 1
    fi
-else
-   print_basename "Mount point exists: ${MOUNTDIR}/${ORIGVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
-   print_basename "Mounting LV snapshot... /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
-   mount /dev/${VOLGROUP}/${SNAPVOL} ${MOUNTDIR}/${ORIGVOL}
-   RES=$?
-
-   if [ "$RES" != '0' ]; then
-      print_basename "Cannot mount LV snapshot: /dev/${VOLGROUP}/${SNAPVOL}" 2>&1 | tee -a ${FILE_LAST_LOG}
-      exit 1
-   fi
 fi
 
 # main command of the script that does the real stuff
-print_basename "Creating backup dir... ${BACKUPDIR}" 2>&1 | tee -a ${FILE_LAST_LOG}
+print_basename "Creating backup dir... \"${BACKUPDIR}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 mkdir -p ${BACKUPDIR}
 
 # create tar_exclude_var.txt
