@@ -54,7 +54,7 @@ _HOST=$(echo $(hostname) | cut -d"." -f1)
 DIR_BACKUP='/var/backup/'${_HOST}'/mysqldump_backup_full'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
-BACKUPFILES_DELETE=7
+DAYS_NUMBER=7
  
 # CUSTOM - mysqldump Parameter.
 DUMP_HOST='127.0.0.1'
@@ -302,7 +302,7 @@ COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
 log "Total archived files: ${COUNT_FILES} "
 log "Delete old archived files ..."
 
-#(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+#(ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 #if [ "$?" != "0" ]; then
 #        log "Delete old archive files $DIR_BACKUP .....[FAILED]"
 #else
@@ -312,17 +312,17 @@ log "Delete old archived files ..."
 #
 ### ======= Added J. Hahn ========
 #   ----------- Start ------------
-if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
-    log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+if [ ${COUNT_FILES} -le ${DAYS_NUMBER} ]; then
+    log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
     log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
 else
-    (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+    (ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 
     if [ "$?" != "0" ]; then
         log "Delete old archive files $DIR_BACKUP .....[FAILED]"
     else
         COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-        log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+        log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
         log "Number of remaining archived files: \"${COUNT_FILES}\" .....................[  OK  ]"
     fi
 fi
