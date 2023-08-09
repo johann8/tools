@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# For Debug
+# For debug
 #set -x
 
 ##############################################################################
-# Script-Name : mysqldump_backup_full.sh                                     #
+# Script-Name : mysqldump_docker_backup_full.sh                              #
 # Description : Script to backup the --all-databases of a MySQL/MariaDB.     #
 #               On successful execution only a LOG file will be written.     #
 #               On error while execution, a LOG file and a error message     #
@@ -13,26 +13,12 @@
 ##############################################################################
 
 ##############################################################################
-#                                                                            #
-# Adapted from:                                                              #
-#                                                                            #
-# https://dokuwiki.tachtler.net/doku.php?id=tachtler:mysql_mariadb_\         #
-# backup_-_skript&s[]=backup                                                 #
-#                                                                            #
-# Author      : Klaus Tachtler, <klaus@tachtler.net>                         #
-# Homepage    : http://www.tachtler.net                                      #
-#                                                                            #
-##############################################################################
-
-##############################################################################
 #  +----------------------------------------------------------------------+  #
 #  | This program is free software; you can redistribute it and/or modify |  #
-#  | it under the terms of the GNU General Public License as published by |  #
-#  | the Free Software Foundation; either version 2 of the License, or    |  #
-#  | (at your option) any later version.                                  |  #
+#  | it.                                                                  |  #
 #  +----------------------------------------------------------------------+  #
 #                                                                            #
-# Copyright (c) 2022 by Johann Hahn.                                         #
+# Copyright (c) 2023 by Johann Hahn.                                         #
 #                                                                            #
 ##############################################################################
 
@@ -61,6 +47,7 @@
 
 # CUSTOM - Script-Name
 SCRIPT_NAME='mysqldump_backup_schema'
+SCRIPT_VERSION='1.05'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
@@ -173,6 +160,8 @@ log ""
 log "Run script with following parameter:"
 log ""
 log "SCRIPT_NAME...: $SCRIPT_NAME"
+log ""
+log "SCRIPT_VERSION...: $SCRIPT_VERSION"
 log ""
 log "DIR_BACKUP....: $DIR_BACKUP"
 log ""
@@ -324,10 +313,12 @@ fi
  
 for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --execute='show databases \G' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
         if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
+                log ""
                 log "Dump data with bin-log data ..."
                 log "File: $DB-$FILE_BACKUP"
                 $MYSQLDUMP_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --master-data=1 --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
         else
+                log ""
                 log "Dump data ..."
                 log "File: $DB-$FILE_BACKUP"
                 $MYSQLDUMP_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USER --password=$DUMP_PASS --databases $DB --flush-privileges $DUMP_LOCK_ALL_TABLE --triggers --routines --events --hex-blob --quick > $DB-$FILE_BACKUP
