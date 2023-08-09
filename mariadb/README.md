@@ -1,4 +1,4 @@
-# MySQL bakup script
+# MySQL backup script
 
 ### Install `mysqldump_backup_full.sh` script
 
@@ -38,5 +38,4 @@ if [[ -f mysqldump_docker_backup_schema.sh_old ]]; then echo -n "Delete old scri
 mv mysqldump_docker_backup_schema.sh  mysqldump_docker_backup_schema.sh_old
 wget https://raw.githubusercontent.com/johann8/tools/master/mariadb/mysqldump_docker_backup_schema.sh
 chmod 0700 mysqldump_docker_backup_schema.sh
-
-
+```
