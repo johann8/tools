@@ -4,7 +4,7 @@
 #set -x
 
 ##############################################################################
-# Script-Name : mysqldump_backup_full.sh                                     #
+# Script-Name : mysqldump_docker_backup_full.sh                              #
 # Description : Script to backup the --all-databases of a MySQL/MariaDB.     #
 #               On successful execution only a LOG file will be written.     #
 #               On error while execution, a LOG file and a error message     #
@@ -13,26 +13,12 @@
 ##############################################################################
 
 ##############################################################################
-#                                                                            #
-# Adapted from:                                                              #
-#                                                                            #
-# https://dokuwiki.tachtler.net/doku.php?id=tachtler:mysql_mariadb_\         #
-# backup_-_skript&s[]=backup                                                 #
-#                                                                            #
-# Author      : Klaus Tachtler, <klaus@tachtler.net>                         #
-# Homepage    : http://www.tachtler.net                                      #
-#                                                                            #
-##############################################################################
-
-##############################################################################
 #  +----------------------------------------------------------------------+  #
 #  | This program is free software; you can redistribute it and/or modify |  #
-#  | it under the terms of the GNU General Public License as published by |  #
-#  | the Free Software Foundation; either version 2 of the License, or    |  #
-#  | (at your option) any later version.                                  |  #
+#  | it.                                                                  |  #
 #  +----------------------------------------------------------------------+  #
 #                                                                            #
-# Copyright (c) 2022 by Johann Hahn.                                         #
+# Copyright (c) 2023 by Johann Hahn.                                         #
 #                                                                            #
 ##############################################################################
  
@@ -61,6 +47,7 @@
  
 # CUSTOM - Script-Name.
 SCRIPT_NAME='mysqldump_backup_full'
+SCRIPT_VERSION='1.05'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
@@ -74,6 +61,7 @@ DUMP_HOST='127.0.0.1'
 MYSQL_PORT='3306'
 DUMP_USER='root'
 DUMP_PASS='geheim'
+
 # CUSTOM - Binary-Logging active. Example: ('Y'(my.cnf|log_bin=bin-log), 'N')
 DUMP_BIN_LOG_ACTIVE='N'
 # CUSTOM - Depends on the database engine. Example: ('Y'(MyISAM), 'N'(InnoDB))
@@ -165,6 +153,8 @@ log ""
 log "Run script with following parameter:"
 log ""
 log "SCRIPT_NAME...: $SCRIPT_NAME"
+log ""
+log "SCRIPT_VERSION...: $SCRIPT_VERSION"
 log ""
 log "DIR_BACKUP....: $DIR_BACKUP"
 log ""
