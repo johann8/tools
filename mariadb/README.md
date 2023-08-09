@@ -1,3 +1,4 @@
-# MySQL backup script
+<h1 align="center">MySQL backup script</h1>
 
-### Install `mysqldump_backup_full.sh` script
+
+Enjoy!
