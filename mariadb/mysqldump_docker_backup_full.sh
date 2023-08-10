@@ -59,7 +59,7 @@ _HOST=$(echo $(hostname) | cut -d"." -f1)
 DIR_BACKUP='/var/backup/'${_HOST}'/mysqldump_full'
 FILE_BACKUP=mysqldump_backup_`date '+%Y%m%d_%H%M%S'`.sql
 FILE_DELETE='*.tar.gz'
-BACKUPFILES_DELETE=7
+DAYS_NUMBER=7
  
 # CUSTOM - mysqldump Parameter.
 DUMP_USER='root'
@@ -323,7 +323,7 @@ $TAR_COMMAND -cvzf $FILE_BACKUP.tar.gz $FILE_BACKUP --atime-preserve --preserve-
 log ""
 log "Delete archive files ..."
 
-#(ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+#(ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 #if [ "$?" != "0" ]; then
 #        log "Delete old archive files $DIR_BACKUP .....[FAILED]"
 #else
@@ -334,17 +334,17 @@ log "Delete archive files ..."
 ### ======= Added J. Hahn ========
 #   ----------- Start ------------
 COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
-    log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+if [ ${COUNT_FILES} -le ${DAYS_NUMBER} ]; then
+    log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
     log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
 else
-    (ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+    (ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 
     if [ "$?" != "0" ]; then
         log "Delete old archive files $DIR_BACKUP .....[FAILED]"
     else
         COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-        log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
+        log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
         log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
     fi
 fi
@@ -427,6 +427,6 @@ cat > /etc/logrotate.d/mysqldump << 'EOL'
 }
 EOL
 
-# ls $FILE_DELETE -t|head -n $BACKUPFILES_DELETE;ls $FILE_DELETE )|sort|uniq -u|xargs rm
+# ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
 # cd  /var/backup/mysqldump_docker_backup_schema/ && (ls *.tar.gz -t |head -n 225; ls *.tar.gz) |sort |uniq -u
 
