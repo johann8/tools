@@ -52,6 +52,7 @@
 
 # CUSTOM - Script-Name
 SCRIPT_NAME='mysqldump_docker_backup_schema'
+SCRIPT_VERSION='1.05'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
@@ -164,6 +165,8 @@ log ""
 log "Run script with following parameter:"
 log ""
 log "SCRIPT_NAME...: $SCRIPT_NAME"
+log ""
+log "SCRIPT_VERSION...: $SCRIPT_VERSION"
 log ""
 log "DIR_BACKUP....: $DIR_BACKUP"
 log ""
@@ -304,11 +307,13 @@ fi
  
 for DB in $(docker exec ${CONTAINER} sh -c 'mysql --user=root --password="${MARIADB_ROOT_PASSWORD}" --execute="show databases \G"' | grep -i Database: | grep -v -e information_schema -e performance_schema -e sys | sed 's/Database:\ //'); do
    if [ $DUMP_BIN_LOG_ACTIVE = 'Y' ]; then
+      log ""
       log "Dump data with bin-log data ..."
       log "Container ID: ${CONTAINER} ..."
       log "File: $DB-$FILE_BACKUP"
       ${DOCKER_COMMAND} exec -e DUMP_USER=${DUMP_USER} -e DB=${DB} -e DUMP_LOCK_ALL_TABLE=${DUMP_LOCK_ALL_TABLE} ${CONTAINER} sh -c 'exec mysqldump --user="${DUMP_USER}" --password="${MARIADB_ROOT_PASSWORD}" --databases "${DB}" --flush-privileges "${DUMP_LOCK_ALL_TABLE}" --triggers --routines --events --hex-blob --quick' > $DB-$FILE_BACKUP
    else
+      log ""
       log "Dump data ..."
       log "Container ID: ${CONTAINER} ..."
       log "File: $DB-$FILE_BACKUP"
