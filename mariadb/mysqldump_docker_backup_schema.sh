@@ -344,21 +344,6 @@ for DB in $(docker exec ${CONTAINER} sh -c 'mysql --user=root --password="${MARI
 
    ### ======= Added J. Hahn ========
    # ----------- Start ------------
-#   COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-#   if [ ${COUNT_FILES} -le ${DAYS_NUMBER} ]; then
-#      log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
-#      log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
-#   else
-#      (ls $FILE_DELETE -t|head -n $DAYS_NUMBER;ls $FILE_DELETE )|sort|uniq -u|xargs rm
-#      if [ "$?" != "0" ]; then
-#         log "Delete old archive files $DIR_BACKUP .....[FAILED]"
-#      else
-#         COUNT_FILES=$(ls -t *.tar.gz |sort | uniq -u |wc -l)
-#         log "The number of files to retain: \"${DAYS_NUMBER}\" .......................[  OK  ]"
-#         log "Delete old archive files $DIR_BACKUP ........[  OK  ]"
-#      fi
-#   fi
-
    if [ ${COUNT_FILES} -le ${BACKUPFILES_DELETE} ]; then
       log "The number of files to retain: \"${BACKUPFILES_DELETE}\" .......................[  OK  ]"
       log "SKIP: There are too few files to delete: \"${COUNT_FILES}\" .............[  OK  ]"
