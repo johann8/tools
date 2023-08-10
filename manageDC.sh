@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.4.1"                  # Set script version
+SCRIPT_VERSION="0.4.2"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 
 #
@@ -259,24 +259,29 @@ start_dc() {
          # Start all containers with shared MariaDB
          if [ "${A_ANSWER}" = "y" ]; then
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
-            # loop for all docker containers and start them
-            for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
-               print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being started..."
+            # loop for all docker containers and stop them
+            for D_MICROSERVICE_NAME in ${ar_db[*]}; do
+               print_basename "Docker microservice ${cyanf}\"${D_MICROSERVICE_NAME}\"${reset} is being started..."
                print_kopf
-               cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
+               cd ${CONTAINER_SAVE_PATH}/${D_MICROSERVICE_NAME}
                print_basename "RUN: ${COMMAND} up -d"
                ${COMMAND} up -d
+               C_RES1=$?
                sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
-               # Print success message if RES1=0
-               print_success "Starting docker container ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-               print_foot
-
-               # Print error message if RES1=1 and exit
-               print_error "Error starting docker container"
-               exit 0
+               # check result
+               if [[ "${C_RES1}" = "0" ]]; then
+                  # Print success message if RES1=0
+                  print_success "Starting docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+                  print_foot
+                  echo ""
+               else
+                  # Print error message if RES1=1
+                  print_error "Error starting docker microservice!"
+                  #exit 0
+               fi
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
@@ -340,23 +345,28 @@ stop_dc() {
          if [ "${A_ANSWER}" = "y" ]; then
             print_basename "The answer is: ${greenf}\"${A_ANSWER}\"${reset}"
             # loop for all docker containers and stop them
-            for DOCKER_MICROSERVICE_NAME in ${ar_db[*]}; do
-               print_basename "Docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} is being stoped..."
+            for D_MICROSERVICE_NAME in ${ar_db[*]}; do
+               print_basename "Docker microservice ${cyanf}\"${D_MICROSERVICE_NAME}\"${reset} is being stoped..."
                print_kopf
-               cd ${CONTAINER_SAVE_PATH}/${DOCKER_MICROSERVICE_NAME}
+               cd ${CONTAINER_SAVE_PATH}/${D_MICROSERVICE_NAME}
                print_basename "RUN: ${COMMAND} down"
                ${COMMAND} down
+               C_RES1=$?
                sleep 5
                print_basename "RUN: ${COMMAND} ps"
                ${COMMAND} ps
 
-               # Print success message if RES1=0
-               print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
-               print_foot
-
-               # Print error message if RES1=1 and exit
-               print_error "Error stopping docker microservice!"
-               exit 0
+               # check result
+               if [[ "${C_RES1}" = "0" ]]; then
+                  # Print success message if RES1=0
+                  print_success "Stopping docker microservice ${cyanf}\"${DOCKER_MICROSERVICE_NAME}\"${reset} done!"
+                  print_foot
+                  echo ""
+               else
+                  # Print error message if RES1=1
+                  print_error "Error stopping docker microservice!"
+                  #exit 0
+               fi
             done
          else
             print_basename "The answer is: ${redf}\"${A_ANSWER}\"${reset} "
