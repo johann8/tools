@@ -350,9 +350,9 @@ for DB in $($MYSQL_COMMAND --host=$DUMP_HOST --port=$MYSQL_PORT --user=$DUMP_USE
             if [ "$?" != "0" ]; then
                 log "Delete old archive files $DIR_BACKUP .....[FAILED]"
             else
-                COUNT_FILES_PER_DB=$(ls -t *.tar.gz |sort | uniq -u | awk -F- '{print $1}' | grep ${DB} | wc -l)
+                COUNT_FILES_PER_DB=$(ls -t *.tar.gz |sort | uniq -u | awk -F- '{print $1}' | grep -w ${DB} | wc -l)
                 log "The number of files to retain per DB: \"${BACKUPFILES_DELETE_DB}\" ...................[  OK  ]"
-                log "Number of remaining archived filesi per DB: \"${COUNT_FILES_PER_DB}\" ........[  OK  ]"
+                log "Number of remaining archived files per DB: \"${COUNT_FILES_PER_DB}\" ........[  OK  ]"
             fi
         fi
         #   ------------ End ---------- 
