@@ -47,7 +47,7 @@
 
 # CUSTOM - Script-Name
 SCRIPT_NAME='mysqldump_backup_schema'
-SCRIPT_VERSION='1.05'
+SCRIPT_VERSION='1.06'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
