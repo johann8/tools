@@ -81,7 +81,7 @@
 #                                                                          #
 #   https://github.com/restic/rest-server                                  #
 #                                                                          #
-# Modified by Johann Hahn on 05.07.2022                                    #
+# Modified by Johann Hahn on 15.08.2023                                    #
 #                                                                          #
 # ======================================================================== #
 
@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.7"
+SCRIPT_VERSION="0.2.8"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -227,10 +227,12 @@ show_help() {
     echo "Example9:  ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
     echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"latest f836c4d8\""
     echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
+    echo "Example12: ${basename} --config /root/restic/.docker01-env snapshots"
+    echo "Example13: ${basename} --config /root/restic/.docker01-env snapshots --latest 2"
     #echo "Example12: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' '"\"
-    echo "Example13: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
-    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
-    echo "Example15: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
+    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
+    echo "Example15: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
+    echo "Example16: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
     echo ""
     echo "### =======  Examples for restore ======="
     echo "*** Restore any snapshot ID ***"
@@ -280,6 +282,7 @@ __PATH=""
 IS_NAME=""
 __NAME=""
 SNAPSHOTS_IDS=""
+LATEST_SID_COUNT=""
 IS_DIFF=""
 IS_LIST=""
 IS_INDEX=""
@@ -354,6 +357,12 @@ do
             SNAPSHOT_ID=$1
             shift
             ;;
+        --latest)
+            shift
+            SID_COUNT_SET=1
+            LATEST_SID_COUNT=$1
+            shift
+            ;;
         -t|--target)
             shift
             RESTORE_PATH=$1
@@ -374,6 +383,7 @@ do
             IS_FORGET=1
             shift
             FORGET_OPTIONS=$1
+            #echo ${FORGET_OPTIONS}; exit 0
             shift
            ;;
         -*|--*)
@@ -665,9 +675,17 @@ then
     #fi
     echo "-bu: Dereferencing starting"
     echo "-bu: Retention policy: '$RETENTION_POLICY'"
+    echo -e ${FORGET_OPTIONS} 
+    #COMMAND1="$($RESTIC_PATH forget $RETENTION_POLICY $(echo ${FORGET_OPTIONS}))"
+    #echo -e "${COMMAND1}" && echo -n "Are these ok [yes]? "; read ok
+    #printf '%s\n' "${COMMAND1}" && sleep 10
+    $RESTIC_PATH forget $RETENTION_POLICY `echo -e ${FORGET_OPTIONS} | sed 's/[']{2}/ /g'`
+    echo "33"
+    exit 0
     $RESTIC_PATH forget     \
         $RETENTION_POLICY   \
-        ${FORGET_OPTIONS}   \
+        #${FORGET_OPTIONS}   \
+        $(echo ${FORGET_OPTIONS}) \
         &
     wait $!
     if [[ $? == 1 ]]
@@ -677,14 +695,21 @@ then
     echo "-bu: Purging done"
 fi
 
-if [[ $IS_SNAPSHOTS ]]
-then
-    $RESTIC_PATH snapshots &
-    wait $!
-    if [[ $? == 1  ]]
-    then
-        error_exit "'restic list'"
-    fi
+if [[ ${IS_SNAPSHOTS} ]]; then
+   # check if set: LATEST_SID_COUNT
+   if [[ ${SID_COUNT_SET} ]]; then
+      $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic list'"
+      fi
+   else
+      $RESTIC_PATH snapshots &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic list'"
+      fi
+   fi
 fi
 
 if [[ $IS_REBUILD ]]
