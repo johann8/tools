@@ -208,11 +208,16 @@ show_help() {
     echo "  -e, --exclude            Exclude Files or Folder from restore"
     echo "  -n, --name               Name of File or Folder to find in a snapshot"
     echo "  -m, -mp, --mountpath     Path to mount snapschot"
-    echo "  -p, --path               "
+    echo "  -p, --path               only consider snapshots including this (absolute) path"
     echo "  -id, -sid --snapshot-id  The name of snapshot ID"
     echo "  -t, --target             Path for the restore of snapshot"
     echo "  -d, --difference         The names of two snapshots that you want to compare. The quotes must be set."
     echo "  -l, --list               List objects in the repository: [blobs|packs|index|snapshots|keys|locks]"
+    echo "  --latest n               only show the last n snapshots for each host and path"
+
+      --latest n            only show the last n snapshots for each host and path
+      --path path           only consider snapshots including this (absolute) path (can be specified multiple times)
+
     echo "  -f, --forget-options     Add forget additional options"
     echo ""
     echo ""
@@ -225,7 +230,7 @@ show_help() {
     echo "Example7:  ${basename} --config /root/restic/.docker01-env ls"
     echo "Example8:  ${basename} --config /root/restic/.docker01-env ls -sid ff4eef11 | grep /myfolder"
     echo "Example9:  ${basename} --config /root/restic/.docker01-env find -n \"ssh\""
-    echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"latest f836c4d8\""
+    echo "Example10: ${basename} --config /root/restic/.docker01-env diff -d \"k859c4d4 f836c4d8\""
     echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
     echo "Example12: ${basename} --config /root/restic/.docker01-env snapshots"
     echo "Example13: ${basename} --config /root/restic/.docker01-env snapshots --latest 2"
