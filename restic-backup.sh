@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.8"
+SCRIPT_VERSION="0.2.9"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -214,6 +214,7 @@ show_help() {
     echo "  -d, --difference         The names of two snapshots that you want to compare. The quotes must be set."
     echo "  -l, --list               List objects in the repository: [blobs|packs|index|snapshots|keys|locks]"
     echo "  --latest n               only show the last n snapshots for each host and path"
+    echo "  --verify                 verify restored files content"
     echo "  -f, --forget-options     Add forget additional options"
     echo ""
     echo ""
@@ -360,8 +361,13 @@ do
             ;;
         --latest)
             shift
-            SID_COUNT_SET=1
+            SET_SID_COUNT=1
             LATEST_SID_COUNT=$1
+            shift
+            ;;
+        --verify)
+            shift
+            SET_VERIFY=1
             shift
             ;;
         -t|--target)
@@ -698,7 +704,7 @@ fi
 
 if [[ ${IS_SNAPSHOTS} ]]; then
    # check if set: LATEST_SID_COUNT
-   if [[ ${SID_COUNT_SET} ]]; then
+   if [[ ${SET_SID_COUNT} ]]; then
       $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} &
       wait $!
       if [[ $? == 1  ]]; then
@@ -804,49 +810,46 @@ then
 fi
 
 # Restic action: restore
-if [[ ${IS_RESTORE} ]]
-then
+if [[ ${IS_RESTORE} ]]; then
+
+    # set restic flags
+    if [[ ${SET_VERIFY} ]]; then
+        SET_VERIFY_FLAG=--verify
+    fi  
+
     # Extract the data from a snapshot
     echo "-bu: Restoring starting"
 
-    if [[ ! -d ${RESTORE_PATH} ]]
-    then
+    if [[ ! -d ${RESTORE_PATH} ]]; then
         echo "-bu: Creating of target \"${RESTORE_PATH}\""
         mkdir -p ${RESTORE_PATH}
     fi
 
-    if [[ ${IS_EXCLUDE} ]]
-    then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --verify &
+    if [[ ${IS_EXCLUDE} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} ${SET_VERIFY_FLAG} &
         wait $!
-        if [[ $? == 1  ]]
-        then
+        if [[ $? == 1  ]]; then
             error_exit "'restic restore'"
         fi
         echo "-bu: Restoring done"
-    elif [[ ${IS_INCLUDE} ]]
-    then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} --verify &
+    elif [[ ${IS_INCLUDE} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} ${SET_VERIFY_FLAG} &
         wait $!
-        if [[ $? == 1  ]]
-        then
+        if [[ $? == 1  ]]; then
             error_exit "'restic restore'"
         fi
         echo "-bu: Restoring done"
-    elif [[ ${IS_PATH} ]]
-    then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --path ${__PATH} --verify &
+    elif [[ ${IS_PATH} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
         wait $!
-        if [[ $? == 1  ]]
-        then
+        if [[ $? == 1  ]]; then
             error_exit "'restic restore'"
         fi
         echo "-bu: Restoring done"
     else 
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --verify &
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} ${SET_VERIFY_FLAG} &
         wait $!
-        if [[ $? == 1  ]]
-        then
+        if [[ $? == 1  ]]; then
             error_exit "'restic restore'"
         fi
         echo "-bu: Restoring done"
