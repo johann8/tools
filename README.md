@@ -44,6 +44,7 @@ chmod 0700 updateDMS.sh
 ```
 
 ### Install `backupDMS.sh` script
+Backup alle docker microservice(s) mit 
 
 ```bash
 cd /usr/local/bin
@@ -51,5 +52,16 @@ if [[ -f backupDMS.sh_old ]]; then echo -n "Delete old script"; rm -rf backupDMS
 mv backupDMS.sh backupDMS.sh_old
 wget https://raw.githubusercontent.com/johann8/tools/master/backupDMS.sh
 chmod 0700 backupDMS.sh
+```
+
+### Install `restic-backup.sh` script
+Backup alle docker microservice(s) mit
+
+```bash
+cd /usr/local/bin
+if [[ -f restic-backup.sh_old ]]; then echo -n "Delete old script"; rm -rf restic-backup.sh_old; echo [ Done ]; fi
+mv restic-backup.sh restic-backup.sh_old
+wget https://raw.githubusercontent.com/johann8/tools/master/restic-backup.sh
+chmod 0700 restic-backup.sh
 ```
 
