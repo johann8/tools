@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.2.9"
+SCRIPT_VERSION="0.3.0"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -246,11 +246,14 @@ show_help() {
     echo "*** Restore only folder \"etc\" or \"/etc\" of any snapshot ***"
     echo "Example3: ${basename} --config /root/restic/.docker01-env restore -sid ef2cf514 --target /tmp/restore --include \"etc\""
     echo ""
+    echo "*** Restore only folder \"zabbix\" in path \"/etc\" of any snapshot ***"
+    echo "Example4: ${basename} --config /root/restic/.docker01-env restore -sid ef2cf514 --target /tmp/restore --include \"zabbix\" --path \"/etc\""
+    echo ""
     echo "*** Restore all files except for folder \"/etc\" of latest snapshot ***"
-    echo "Example4: ${basename} --config /root/restic/.docker01-env restore -sid latest --target /tmp/restore --exclude \"etc\"" 
+    echo "Example5: ${basename} --config /root/restic/.docker01-env restore -sid latest --target /tmp/restore --exclude \"etc\"" 
     echo ""
     echo "*** Restore all files in the path \"/etc\" of latest snapshot ***"
-    echo "Example5: ${basename} --config /root/restic/.docker01-env restore -id latest -t /tmp/restore/ --path /etc"
+    echo "Example6: ${basename} --config /root/restic/.docker01-env restore -id latest -t /tmp/restore/ --path /etc"
     echo ""
 }
 
@@ -825,13 +828,46 @@ if [[ ${IS_RESTORE} ]]; then
         mkdir -p ${RESTORE_PATH}
     fi
 
-    if [[ ${IS_EXCLUDE} ]]; then
+    if [[ ${IS_EXCLUDE} ]] && [[ ${IS_INCLUDE} ]] && [[ ${IS_PATH} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --include ${INCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
+        wait $!
+        if [[ $? == 1  ]]; then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+
+    elif [[ ${IS_EXCLUDE} ]] && [[ ${IS_INCLUDE} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --include ${INCLUDE_PATH} ${SET_VERIFY_FLAG} &
+        wait $!
+        if [[ $? == 1  ]]; then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+
+    elif [[ ${IS_EXCLUDE} ]] && [[ ${IS_PATH} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
+        wait $!
+        if [[ $? == 1  ]]; then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+
+    elif [[ ${IS_INCLUDE} ]] && [[ ${IS_PATH} ]]; then
+        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
+        wait $!
+        if [[ $? == 1  ]]; then
+            error_exit "'restic restore'"
+        fi
+        echo "-bu: Restoring done"
+
+    elif [[ ${IS_EXCLUDE} ]]; then
         $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} ${SET_VERIFY_FLAG} &
         wait $!
         if [[ $? == 1  ]]; then
             error_exit "'restic restore'"
         fi
         echo "-bu: Restoring done"
+
     elif [[ ${IS_INCLUDE} ]]; then
         $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} ${SET_VERIFY_FLAG} &
         wait $!
