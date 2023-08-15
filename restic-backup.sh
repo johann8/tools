@@ -214,10 +214,6 @@ show_help() {
     echo "  -d, --difference         The names of two snapshots that you want to compare. The quotes must be set."
     echo "  -l, --list               List objects in the repository: [blobs|packs|index|snapshots|keys|locks]"
     echo "  --latest n               only show the last n snapshots for each host and path"
-
-      --latest n            only show the last n snapshots for each host and path
-      --path path           only consider snapshots including this (absolute) path (can be specified multiple times)
-
     echo "  -f, --forget-options     Add forget additional options"
     echo ""
     echo ""
