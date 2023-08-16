@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.0"
+SCRIPT_VERSION="0.3.1"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -812,84 +812,48 @@ then
     echo "-bu: You can now browse at: \"${MOUNT_PATH}\""
 fi
 
-# Restic action: restore
+### Restic action: restore
+# Extract the data from a snapshot
 if [[ ${IS_RESTORE} ]]; then
 
-    # set restic flags
+   echo "-bu: Restoring starting"
+
+    # set restic flag --verify
     if [[ ${SET_VERIFY} ]]; then
         SET_VERIFY_FLAG=--verify
     fi  
 
-    # Extract the data from a snapshot
-    echo "-bu: Restoring starting"
-
+    # check if restore path exists
     if [[ ! -d ${RESTORE_PATH} ]]; then
-        echo "-bu: Creating of target \"${RESTORE_PATH}\""
+        echo "-bu: Creating of restore target \"${RESTORE_PATH}\""
         mkdir -p ${RESTORE_PATH}
     fi
 
-    if [[ ${IS_EXCLUDE} ]] && [[ ${IS_INCLUDE} ]] && [[ ${IS_PATH} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --include ${INCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-
-    elif [[ ${IS_EXCLUDE} ]] && [[ ${IS_INCLUDE} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --include ${INCLUDE_PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-
-    elif [[ ${IS_EXCLUDE} ]] && [[ ${IS_PATH} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-
-    elif [[ ${IS_INCLUDE} ]] && [[ ${IS_PATH} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-
-    elif [[ ${IS_EXCLUDE} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --exclude ${EXCLUDE_PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-
-    elif [[ ${IS_INCLUDE} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --include ${INCLUDE_PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-    elif [[ ${IS_PATH} ]]; then
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} --path ${__PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
-    else 
-        $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} ${SET_VERIFY_FLAG} &
-        wait $!
-        if [[ $? == 1  ]]; then
-            error_exit "'restic restore'"
-        fi
-        echo "-bu: Restoring done"
+    # if var IS_EXCLUDE true add RESTORE_OPTION
+    if [[ ${IS_EXCLUDE} ]]; then
+       RESTORE_OPTION="--exclude ${EXCLUDE_PATH}"
     fi
+
+    # if var IS_INCLUDE true add RESTORE_OPTION
+    if [[ ${IS_INCLUDE} ]]; then
+       RESTORE_OPTION="${RESTORE_OPTION} --include ${INCLUDE_PATH}"
+    fi
+
+    # if var IS_PATH true add RESTORE_OPTION
+    if [[ ${IS_PATH} ]]; then
+       RESTORE_OPTION="${RESTORE_OPTION} --path ${__PATH}"
+    fi
+    
+    # For debug
+    #echo "-bu: RESTORE_OPTION - ${RESTORE_OPTION}"
+
+    # start restore
+    $RESTIC_PATH restore ${SNAPSHOT_ID} --target ${RESTORE_PATH} ${RESTORE_OPTION} ${SET_VERIFY_FLAG} &
+    wait $!
+    if [[ $? == 1  ]]; then
+        error_exit "'restic restore'"
+    fi
+    echo "-bu: Restoring done"
 fi
 
 # Restic action: stats
