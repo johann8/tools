@@ -20,7 +20,7 @@ reset="${esc}[0m"
 basename="${0##*/}"
 # Print script name
 print_basename() { echo "${pinkf}${basename}:${reset} $1"; }
-SCRIPT_VERSION="0.4.2"                  # Set script version
+SCRIPT_VERSION="0.4.3"                  # Set script version
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 
 #
@@ -28,8 +28,8 @@ TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")  # time stamp
 #
 
 ### *** Change me ***
-DB_CONTAINER_NAME=mariadb               # The name of MySQL / MariaDB container
-DB_NETWORK=mysqlNet                     # The name of network of MySQL / MariaDB container
+DB_CONTAINER_NAME=mariadb               # The name of shared MySQL / MariaDB container
+DB_NETWORK=mysqlNet                     # The name of shared network of MySQL / MariaDB container
 HYPHEN_ON=false                         # Docker microservice name may contain only: letters and numbers; Letters, numper and hyphen: false
 SCRIPT_ARG=$(for arg in "$*"; do echo "$arg"; done)
 
@@ -96,7 +96,6 @@ else
    esac
    done
 fi
-
 
 # container working dir
 #DEFAULT_CONTAINER_SAVE_PATH="/opt"
@@ -781,6 +780,21 @@ done
 
 # Print all found docker microservices
 print_basename "The docker microservices are: ${cyanf}\"$(echo ${ar[@]})\"${reset}"
+
+### check if Shared DB exists
+if [[ -n ${DB_CONTAINER_NAME} ]]; then
+   SHARED_MYSQL=$(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml | uniq |wc -l)
+   ar_db=
+   ar_db=($(grep -r -o ${DB_CONTAINER_NAME}_${DB_NETWORK} ${CONTAINER_SAVE_PATH}/*/docker-compose.yml |uniq | awk -F'/' '{print $3}'))
+
+   if [ "${SHARED_MYSQL}" -ge 1 ]; then
+      print_basename "There is a shared DB: ${cyanf}\"${DB_CONTAINER_NAME}\"${reset}"
+      print_basename "Docker microservice(s) using shared DB: ${cyanf}\"${ar_db[*]}\"${reset}"
+   else
+      print_basename "There is/are no Docker Microservice(s) using shared DB."
+   fi
+fi
+
 
 # Expect to get an action command as a positional argument.
 if [[ -z $POSITIONAL_ARGS ]]; then
