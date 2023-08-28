@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.2"
+SCRIPT_VERSION="0.3.3"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -216,6 +216,7 @@ show_help() {
     echo "  --latest n               only show the last n snapshots for each host and path"
     echo "  --verify                 verify restored files content"
     echo "  -f, --forget-options     Add forget additional options"
+    echo "  -g --group-by            group the output by the same filters (host, paths, tags)" 
     echo ""
     echo ""
     echo "Example1:  ${basename} --config /root/restic/.docker01-env init"
@@ -231,10 +232,13 @@ show_help() {
     echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
     echo "Example12: ${basename} --config /root/restic/.docker01-env snapshots"
     echo "Example13: ${basename} --config /root/restic/.docker01-env snapshots --latest 2"
-    echo "Example14: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
-    echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
-    echo "Example15: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
-    echo "Example16: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
+    echo "Example14: ${basename} --config /root/restic/.docker01-env snapshots --group-by host,[paths],[tags]"
+    echo "Example15: ${basename} --config /root/restic/.docker01-env snapshots --latest 5 --group-by host,[paths],[tags]"
+    echo "Example16: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
+    echo "Example17: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
+    echo "Example18: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
+    echo "Example19: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
+    echo ""
     echo ""
     echo "### =======  Examples for restore ======="
     echo "*** Restore any snapshot ID ***"
@@ -366,6 +370,12 @@ do
             shift
             SET_SID_COUNT=1
             LATEST_SID_COUNT=$1
+            shift
+            ;;
+        -g|--group-by)
+            shift
+            SET_GROUP_BY=1
+            GROUP_BY=$1
             shift
             ;;
         --verify)
@@ -718,18 +728,34 @@ if [[ $IS_FORGET_AND_PRUNE ]]; then
 fi
 
 if [[ ${IS_SNAPSHOTS} ]]; then
+   # check if set: LATEST_SID_COUNT and SET_GROUP_BY
+   if [[ ${SET_SID_COUNT} ]] && [[ ${SET_GROUP_BY} ]]; then
+      $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} --group-by ${GROUP_BY} &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic snapshots --latest --group-by'"
+      fi
+
    # check if set: LATEST_SID_COUNT
-   if [[ ${SET_SID_COUNT} ]]; then
+   elif [[ ${SET_SID_COUNT} ]]; then
       $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} &
       wait $!
       if [[ $? == 1  ]]; then
-         error_exit "'restic list'"
+         error_exit "'restic snapshots --latest'"
+      fi
+
+   # check if set: SET_GROUP_BY
+   elif [[ ${SET_GROUP_BY} ]]; then
+      $RESTIC_PATH snapshots --group-by ${GROUP_BY} &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic snapshots --group-by'"
       fi
    else
       $RESTIC_PATH snapshots &
       wait $!
       if [[ $? == 1  ]]; then
-         error_exit "'restic list'"
+         error_exit "'restic snapshots'"
       fi
    fi
 fi
