@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.1"
+SCRIPT_VERSION="0.3.2"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -231,7 +231,7 @@ show_help() {
     echo "Example11: ${basename} --config /root/restic/.docker01-env list -l snapshots"
     echo "Example12: ${basename} --config /root/restic/.docker01-env snapshots"
     echo "Example13: ${basename} --config /root/restic/.docker01-env snapshots --latest 2"
-    #echo "Example12: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by ' '"\"
+    echo "Example14: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
     echo "Example14: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
     echo "Example15: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
     echo "Example16: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
@@ -677,31 +677,43 @@ else
     fi
 fi
 
-if [[ $IS_FORGET_AND_PRUNE ]]
-then
-    #if [[ -z $RETENTION_POLICY ]]
-    #then
-    #    RETENTION_POLICY="--keep-daily 14 --keep-weekly 16 --keep-monthly 18 --keep-yearly 3"
-    #fi
+if [[ $IS_FORGET_AND_PRUNE ]]; then
     echo "-bu: Dereferencing starting"
     echo "-bu: Retention policy: '$RETENTION_POLICY'"
     echo -e ${FORGET_OPTIONS} 
+
     #COMMAND1="$($RESTIC_PATH forget $RETENTION_POLICY $(echo ${FORGET_OPTIONS}))"
     #echo -e "${COMMAND1}" && echo -n "Are these ok [yes]? "; read ok
     #printf '%s\n' "${COMMAND1}" && sleep 10
-    $RESTIC_PATH forget $RETENTION_POLICY `echo -e ${FORGET_OPTIONS} | sed 's/[']{2}/ /g'`
-    echo "33"
-    exit 0
-    $RESTIC_PATH forget     \
-        $RETENTION_POLICY   \
-        #${FORGET_OPTIONS}   \
-        $(echo ${FORGET_OPTIONS}) \
-        &
-    wait $!
-    if [[ $? == 1 ]]
-    then
-        error_exit "'restic forget'"
+    #$RESTIC_PATH forget $RETENTION_POLICY `echo -e ${FORGET_OPTIONS} | sed 's/[']{2}/ /g'`
+
+    # forget snapsot id
+    if [[ -n ${SNAPSHOT_ID} ]]; then
+       # forget snapsot id
+       $RESTIC_PATH forget ${SNAPSHOT_ID} $(echo -e ${FORGET_OPTIONS}) --prune &
+       wait $!
+       if [[ $? == 1  ]]; then
+          error_exit "'restic forget snapshot'"
+       fi
+    else 
+       # forget with retention policy
+       $RESTIC_PATH forget $RETENTION_POLICY $(echo -e ${FORGET_OPTIONS}) --prune &
+       wait $!
+       if [[ $? == 1  ]]; then
+          error_exit "'restic forget retention policyi'"
+       fi    
     fi
+    #exit 0
+    #$RESTIC_PATH forget     \
+    #    $RETENTION_POLICY   \
+    #    #${FORGET_OPTIONS}   \
+    #    $(echo ${FORGET_OPTIONS}) \
+    #    &
+    #wait $!
+    #if [[ $? == 1 ]]
+    #then
+    #    error_exit "'restic forget'"
+    #fi
     echo "-bu: Purging done"
 fi
 
