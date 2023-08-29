@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.3"
+SCRIPT_VERSION="0.3.4"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -234,10 +234,11 @@ show_help() {
     echo "Example13: ${basename} --config /root/restic/.docker01-env snapshots --latest 2"
     echo "Example14: ${basename} --config /root/restic/.docker01-env snapshots --group-by host,[paths],[tags]"
     echo "Example15: ${basename} --config /root/restic/.docker01-env snapshots --latest 5 --group-by host,[paths],[tags]"
-    echo "Example16: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
-    echo "Example17: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
-    echo "Example18: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
-    echo "Example19: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
+    echo "Example16: ${basename} --config /root/restic/.docker01-env snapshots --path \"/etc\""
+    echo "Example17: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
+    echo "Example18: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
+    echo "Example19: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] -dry-run\""
+    echo "Example20: ${basename} --config /root/restic/.docker01-env forget  -f \"--dry-run --group-by host,[paths],[tags]\""
     echo ""
     echo ""
     echo "### =======  Examples for restore ======="
@@ -736,6 +737,14 @@ if [[ ${IS_SNAPSHOTS} ]]; then
          error_exit "'restic snapshots --latest --group-by'"
       fi
 
+   # check if set: LATEST_SID_COUNT and IS_PATH
+   elif [[ ${SET_SID_COUNT} ]] && [[ ${IS_PATH} ]]; then
+      $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} --path "${__PATH}" &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic snapshots --latest --group-by'"
+      fi
+
    # check if set: LATEST_SID_COUNT
    elif [[ ${SET_SID_COUNT} ]]; then
       $RESTIC_PATH snapshots --latest ${LATEST_SID_COUNT} &
@@ -751,6 +760,16 @@ if [[ ${IS_SNAPSHOTS} ]]; then
       if [[ $? == 1  ]]; then
          error_exit "'restic snapshots --group-by'"
       fi
+
+   # check if set: IS_PATH
+   elif [[ ${IS_PATH} ]]; then
+      $RESTIC_PATH snapshots --path "${__PATH}" &
+      wait $!
+      if [[ $? == 1  ]]; then
+         error_exit "'restic snapshots --path'"
+      fi
+
+   # default
    else
       $RESTIC_PATH snapshots &
       wait $!
