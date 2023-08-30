@@ -242,6 +242,7 @@ show_help() {
     echo "Example20: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] --dry-run\""
     echo "Example21: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags]\""
     echo "Example22: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host --dry-run\""
+    echo "Example22: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by '' - Does not work!\""
     echo ""
     echo ""
     echo "### =======  Examples for restore ======="
@@ -710,14 +711,18 @@ if [[ $IS_FORGET_AND_PRUNE ]]; then
     # forget snapsot id
     if [[ -n ${SNAPSHOT_ID} ]]; then
        # forget snapsot id
-       $RESTIC_PATH forget ${SNAPSHOT_ID} $(echo -e ${FORGET_OPTIONS}) --prune &
+       $RESTIC_PATH forget ${SNAPSHOT_ID} ${FORGET_OPTIONS} --prune &
        wait $!
        if [[ $? == 1  ]]; then
           error_exit "'restic forget snapshot'"
        fi
      else 
        # forget with retention policy
-       $RESTIC_PATH forget $RETENTION_POLICY $(echo -e ${FORGET_OPTIONS}) --prune &
+       $RESTIC_PATH forget $RETENTION_POLICY ${FORGET_OPTIONS} --prune &
+       #$RESTIC_PATH forget $RETENTION_POLICY $(echo -e ${FORGET_OPTIONS}) --prune &
+       #AR_FORGET_OPTIONS=($(echo -e ${FORGET_OPTIONS}))
+       #echo -e "Test: ${AR_FORGET_OPTIONS[@]}"
+       #$RESTIC_PATH forget $RETENTION_POLICY ${AR_FORGET_OPTIONS[@]} --prune &
        wait $!
        if [[ $? == 1  ]]; then
           error_exit "'restic forget retention policyi'"
