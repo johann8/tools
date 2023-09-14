@@ -64,7 +64,7 @@ rclone sync -Pv --check-first /mnt/nfsStorage/docker/mc/ onedrive:Backup/Backup/
 cd /usr/local/bin
 if [[ -f mount_onedrive.sh_old ]]; then echo -n "Delete old script"; rm -rf mount_onedrive.sh_old; echo [ Done ]; fi
 mv mount_onedrive.sh  mount_onedrive.sh_old
-wget https://raw.githubusercontent.com/johann8/tools/onedrive/master/mount_onedrive.sh
+wget https://raw.githubusercontent.com/johann8/tools/master/onedrive/mount_onedrive.sh
 chmod 0700 mount_onedrive.sh
 ```
 
@@ -74,7 +74,7 @@ chmod 0700 mount_onedrive.sh
 cd /usr/local/bin
 if [[ -f unmount_onedrive.sh_old ]]; then echo -n "Delete old script"; rm -rf unmount_onedrive.sh_old; echo [ Done ]; fi
 mv unmount_onedrive.sh  unmount_onedrive.sh_old
-wget https://raw.githubusercontent.com/johann8/tools/onedrive/master/unmount_onedrive.sh
+wget https://raw.githubusercontent.com/johann8/tools/master/onedrive/unmount_onedrive.sh
 chmod 0700 unmount_onedrive.sh
 
 ```
