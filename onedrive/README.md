@@ -68,7 +68,7 @@ wget https://raw.githubusercontent.com/johann8/tools/master/onedrive/mount_onedr
 chmod 0700 mount_onedrive.sh
 ```
 
-### Install `umount_onedrive.sh` script
+### Install `unmount_onedrive.sh` script
 
 ```bash
 cd /usr/local/bin
