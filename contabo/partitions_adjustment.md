@@ -10,7 +10,7 @@ Manchmal ist es notwendig die Festplattenpartitionierung zu ändern, um so etwa 
 - Partitionen anpassen
 - Rebooten
 
-## Als Beispiel die `root` Partition verkleiner und danach eine LVM Partition anlegen, `swap` und `opt` einrichten
+## Als Beispiel die `root` Partition verkleinen und danach eine LVM Partition anlegen, `swap` und `opt` einrichten
 
 - Partitionlayout anzeigen lassen
 ```
@@ -32,7 +32,7 @@ Number  Start   End     Size    Type     File system  Flags
 
 - partition erstellen
 ```
-(parted) `mkpart primary ext4`
+(parted) mkpart primary ext4
 Start? 193GB
 End? 215GB
 (parted) print free
@@ -48,7 +48,8 @@ Number  Start   End     Size    Type     File system  Flags
  2      1050MB  193GB   192GB   primary  ext4
  3      193GB   215GB   21.5GB  primary  ext4         lba
  
-(parted) `set 3 lvm on`
+(parted) set 3 lvm on
+
 (parted) print free
 Model: QEMU QEMU HARDDISK (scsi)
 Disk /dev/sda: 215GB
@@ -62,7 +63,8 @@ Number  Start   End     Size    Type     File system  Flags
  2      1050MB  193GB   192GB   primary  ext4
  3      193GB   215GB   21.5GB  primary  ext4         lvm, lba
 
-(parted) `set 3 lba off`
+(parted) set 3 lba off
+
 (parted) print free
 Model: QEMU QEMU HARDDISK (scsi)
 Disk /dev/sda: 215GB
@@ -88,7 +90,7 @@ sda      8:0    0  200G  0 disk
 └─sda3   8:3    0   20G  0 part
 ```
 
-- Die Partition `sda3` für LVM als Phyisical Volume (PV) vorbereiten, wobei -ff = force und -y=alles mit Ja beantworten bedeutet, metadatasize is LVM2 default mit 512Byte:
+- Die Partition `sda3` für LVM als Phyisical Volume (PV) vorbereiten, wobei -ff = force und -y=alles mit `Ja` beantworten bedeutet, metadatasize is LVM2 default mit 512Byte:
 ```
 pvcreate -y -ff /dev/sda3
 -------------------------
@@ -205,5 +207,10 @@ systemctl start  monit.service
 ```
 
 - Prüfen, ob alles läuft
+- Verzeichnis `opt_old` löschen
+```
+rm -rf /opt_old
+```
+
 
 Enjoy !
