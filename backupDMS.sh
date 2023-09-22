@@ -99,7 +99,7 @@ if [ ! -s "${FIND_COMMAND}" ]; then
    print_basename "Please install \"findutils\" packet."
    exit 13
 else
-   print_basename "Check if command '${FIND_COMMAND}' was found............[  OK  ]"
+   print_basename "Check if command '${FIND_COMMAND}' was found.............[  OK  ]"
 fi
 
 # Check if command (file) NOT exist OR IS empty.
