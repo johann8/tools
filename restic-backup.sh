@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.8"
+SCRIPT_VERSION="0.3.9"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -219,6 +219,7 @@ show_help() {
     echo "  --latest n               only show the last n snapshots for each host and path"
     echo "  --verify                 verify restored files content"
     echo "  --read-data              Used with check: Verify the integrity of the pack files in the repository"
+    echo "  --read-data-subset       Used with check: Verify the integrity only a subset of the repository pack files at a time."
     echo "  -H, --host               filter snapshots by host"
     echo "  -f, --forget-options     Add forget additional options"
     echo "  -g --group-by            group the output by the same filters (host, paths, tags)" 
@@ -248,6 +249,7 @@ show_help() {
     echo "Example22: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by host --dry-run\""
     echo "Example23: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by '' - Does not work!\""
     echo "Example24: ${basename} --config /root/restic/.docker01-env check --read-data"
+    echo "Example25: ${basename} --config /root/restic/.docker01-env check --read-data-subset 1/5 | --read-data-subset 10% | --read-data-subset 10G"
     echo ""
     echo ""
     echo "### =======  Examples for restore ======="
@@ -279,6 +281,7 @@ IS_BACKUP=""
 IS_FORGET_AND_PRUNE=""
 IS_CHECK=""
 IS_CHECK_READ_DATA=""
+IS_CHECK_READ_DATA_SUBSET=""
 IS_REBUILD=""
 IS_PRUNE_ONLY=""
 IS_LIST=""
@@ -418,6 +421,12 @@ do
             ;;
          --read-data)
             IS_CHECK_READ_DATA=1
+            shift
+           ;;
+         --read-data-subset)
+            IS_CHECK_READ_DATA_SUBSET=1
+            shift
+            READ_DATA_SUBSET_OPTION=$1
             shift
            ;;
         -f|--forget-options)
@@ -848,6 +857,16 @@ if [[ $IS_CHECK ]]; then
         if [[ $? == 1  ]]; then
            error_exit "'restic check --read-data'"
         fi
+
+    elif [[ ${IS_CHECK_READ_DATA_SUBSET} == 1 ]]; then
+        # Check repository for errors.
+        echo "-bu: Checking starting"
+        $RESTIC_PATH check --read-data-subset=${READ_DATA_SUBSET_OPTION} &
+        wait $!
+        if [[ $? == 1  ]]; then
+           error_exit "'restic check --read-data-subset'"
+        fi
+
     else
         # Check repository for errors.
         echo "-bu: Checking starting"
