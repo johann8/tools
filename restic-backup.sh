@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.7"
+SCRIPT_VERSION="0.3.8"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -218,7 +218,8 @@ show_help() {
     echo "  -l, --list               List objects in the repository: [blobs|packs|index|snapshots|keys|locks]"
     echo "  --latest n               only show the last n snapshots for each host and path"
     echo "  --verify                 verify restored files content"
-    echo "  -H, --host                   filter snapshots by host"
+    echo "  --read-data              Used with check: Verify the integrity of the pack files in the repository"
+    echo "  -H, --host               filter snapshots by host"
     echo "  -f, --forget-options     Add forget additional options"
     echo "  -g --group-by            group the output by the same filters (host, paths, tags)" 
     echo ""
@@ -241,11 +242,12 @@ show_help() {
     echo "Example16: ${basename} --config /root/restic/.docker01-env snapshots --host myhost --latest 5"
     echo "Example17: ${basename} --config /root/restic/.docker01-env snapshots --path \"/etc\" --latest 3"
     echo "Example18: ${basename} --config /root/restic/.docker01-env forget -sid f836c4d8"
-    echo "Example19: ${basename} --config /root/restic/.docker01-env forget  -f \"--host myhost.domain.com --dry-run\""
-    echo "Example20: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags] --dry-run\""
-    echo "Example21: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host,[paths],[tags]\""
-    echo "Example22: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by host --dry-run\""
-    echo "Example22: ${basename} --config /root/restic/.docker01-env forget  -f \"--group-by '' - Does not work!\""
+    echo "Example19: ${basename} --config /root/restic/.docker01-env forget -f \"--host myhost.domain.com --dry-run\""
+    echo "Example20: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by host,[paths],[tags] --dry-run\""
+    echo "Example21: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by host,[paths],[tags]\""
+    echo "Example22: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by host --dry-run\""
+    echo "Example23: ${basename} --config /root/restic/.docker01-env forget -f \"--group-by '' - Does not work!\""
+    echo "Example24: ${basename} --config /root/restic/.docker01-env check --read-data"
     echo ""
     echo ""
     echo "### =======  Examples for restore ======="
@@ -276,6 +278,7 @@ IS_UNLOCK=""
 IS_BACKUP=""
 IS_FORGET_AND_PRUNE=""
 IS_CHECK=""
+IS_CHECK_READ_DATA=""
 IS_REBUILD=""
 IS_PRUNE_ONLY=""
 IS_LIST=""
@@ -411,6 +414,10 @@ do
             IS_INDEX=1
             shift
             INDEX_FLAG=$1
+            shift
+            ;;
+         --read-data)
+            IS_CHECK_READ_DATA=1
             shift
            ;;
         -f|--forget-options)
@@ -820,8 +827,7 @@ then
     echo "-bu: Run 'prune' followed by 'check' to complete."
 fi
 
-if [[ $IS_PRUNE_ONLY ]]
-then
+if [[ $IS_PRUNE_ONLY ]]; then
     echo "-bu: Pruning starting"
     $RESTIC_PATH prune
     wait $!
@@ -832,15 +838,24 @@ then
     echo "-bu: Pruning done"
 fi
 
-if [[ $IS_CHECK ]]
-then
-    # Check repository for errors.
-    echo "-bu: Checking starting"
-    $RESTIC_PATH check &
-    wait $!
-    if [[ $? == 1  ]]
-    then
-        error_exit "'restic check'"
+# check repo
+if [[ $IS_CHECK ]]; then
+    if [[ ${IS_CHECK_READ_DATA} == 1 ]]; then
+        # Check repository for errors.
+        echo "-bu: Checking starting"
+        $RESTIC_PATH check --read-data &
+        wait $!
+        if [[ $? == 1  ]]; then
+           error_exit "'restic check --read-data'"
+        fi
+    else
+        # Check repository for errors.
+        echo "-bu: Checking starting"
+        $RESTIC_PATH check &
+        wait $!
+        if [[ $? == 1  ]]; then
+           error_exit "'restic check'"
+        fi
     fi
     echo "-bu: Checking done"
 fi
