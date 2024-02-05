@@ -107,7 +107,7 @@
 #set -x
 
 # Set script version
-SCRIPT_VERSION="0.3.6"
+SCRIPT_VERSION="0.3.7"
 
 # Set path for restic action "restore"
 #RESTORE_PATH="${RESTORE_PATH:-/tmp/restore}" 
@@ -120,6 +120,9 @@ ENABLE_REST_SERVER=true
 
 # set Path to restic
 RESTIC_PATH="${RESTIC_PATH:-/usr/local/bin/restic}"
+
+# restic version
+RESTIC_VERSION=$(${RESTIC_PATH} version | awk '{print $2}')
 
 # set
 RETENTION_POLICY="${RETENTION_POLICY:-"--keep-daily 30 --keep-weekly 24 --keep-monthly 6"}"
@@ -441,7 +444,12 @@ then
 else
     # RESTIC_PATH=restic
     # RESTIC_PATH="echo restic"
-    echo "-bu: restic path is: $RESTIC_PATH"
+    echo "-bu: Restic path is: $RESTIC_PATH"
+fi
+
+# restic version
+if [[ ${RESTIC_VERSION} ]]; then
+   echo "-bu: Restic version is: ${RESTIC_VERSION}"
 fi
 
 # Expect to get an action command as a positional argument.
