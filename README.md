@@ -1,14 +1,14 @@
 # Tools
 
-- [Install manageDC.sh script](#install-manageDC.sh-script)
-- [Install delete_old_files.sh script](#install-delete_old_files.sh-script)
+- [Install manageDC.sh script](#install-managedcsh-script)
+- [Install delete_old_files.sh script](##install-delete_old_filessh-script)
 - [](#)
 - [](#)
 - [](#)
 - [](#)
 
 
-### Install manageDC.sh script 
+### Install `manageDC.sh` script 
 
 ```bash
 cd /usr/local/bin
@@ -18,7 +18,7 @@ wget https://raw.githubusercontent.com/johann8/tools/master/manageDC.sh
 chmod 0700 manageDC.sh 
 ```
 
-### Install delete_old_files.sh script
+### Install `delete_old_files.sh` script
 The files to be deleted are located directly in the folder.
 
 ```bash
