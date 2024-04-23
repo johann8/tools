@@ -1,11 +1,12 @@
 # Tools
 
-*   [Install manageDC.sh script](#install-managedcsh-script)*     [Install delete_old_files.sh script](#install-delete_old_filessh-script)
+*   [Install manageDC.sh script](#install-managedcsh-script)
+*   [Install delete_old_files.sh script](#install-delete_old_filessh-script)
 *   [Install delete_old_files_subfolder.sh script](#install-delete_old_files_subfoldersh-script)
-- [Install updateDMS.sh script](#install-updatedmssh-script)
-- [Install backupDMS.sh script](#install-backupdmssh-script)
-- [Install restic-backup.sh script](#install-restic-backupsh-script)
-- [Install backup_lvm_snap.sh script](docs/install_backup_lvm_snapsh_script.md)
+*   [Install updateDMS.sh script](#install-updatedmssh-script)
+*   [Install backupDMS.sh script](#install-backupdmssh-script)
+*   [Install restic-backup.sh script](#install-restic-backupsh-script)
+*   [Install backup_lvm_snap.sh script](docs/install_backup_lvm_snapsh_script.md)
 
 
 ### Install `manageDC.sh` script 
