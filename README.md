@@ -1,5 +1,13 @@
 # Tools
 
+- [Install manageDC.sh script](#install-manageDC.sh-script)
+- [Install delete_old_files.sh script](#install-delete_old_files.sh-script)
+- [](#)
+- [](#)
+- [](#)
+- [](#)
+
+
 ### Install `manageDC.sh` script 
 
 ```bash
