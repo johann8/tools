@@ -91,6 +91,7 @@ BACKUP_DAYS=3
 SYSTEMCTL_COMMAND=`command -v systemctl`
 LVREMOVE_COMMAND=`command -v lvremove`
 LVCREATE_COMMAND=`command -v lvcreate`
+LVDISPLAY_COMMAND=`command -v lvdisplay`
 MOUNT_COMMAND=`command -v mount`
 UMOUNT_COMMAND=`command -v umount`
 
@@ -328,6 +329,16 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
          exit 0
       else
          echo -e "Info: LVM snapshot \"${i}_${SNAP_SUFFIX}\" was successfully created." | tee -a ${FILE_LAST_LOG}
+
+         # Check LV snap state (active | INACTIVE)
+         LVM_SNAP_STATE=$(${LVDISPLAY_COMMAND} /dev/${VOLGROUP}/${i}_${SNAP_SUFFIX} |grep 'LV snapshot status' |awk '{print $4}')
+         if [[ ${LVM_SNAP_STATE} == 'active' ]]; then
+            echo -e "Info: LVM snapshot \"${i}_${SNAP_SUFFIX}\" state is \"active\"." | tee -a ${FILE_LAST_LOG}
+         else
+            echo -e "Error: LVM snapshot \"${i}_${SNAP_SUFFIX}\" state is \"INACTIVE\"." | tee -a ${FILE_LAST_LOG}
+            echo -e "Info: The wrong size of LVM snapshot \"${i}_${SNAP_SUFFIX}\" was chosen." | tee -a ${FILE_LAST_LOG}
+            exit 0
+         fi
       fi
 
       # check that the mount point does not already exist, mount snapshot MOUNTDIR="/mnt/lvm_snap"
