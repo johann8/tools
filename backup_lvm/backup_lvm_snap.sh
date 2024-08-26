@@ -12,8 +12,8 @@
 #               will be send by e-mail.                                      #
 #                                                                            #
 # Created     : 02.08.2022                                                   #
-# Last update : 21.08.2024                                                   #
-# Version     : 0.2.2                                                        #
+# Last update : 26.08.2024                                                   #
+# Version     : 0.2.3                                                        #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermann*****technik.de>              #
 # DokuWiki    : https://docu.***.wassermanngruppe.de                         #
@@ -51,7 +51,7 @@ MOUNT_OPTIONS="-o nouuid"                                 # Mount option for xfs
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.2.2"
+SCRIPT_VERSION="0.2.3"
 SCRIPT_START_TIME=$SECONDS                                # Script start time
 
 # CUSTOM - vars
