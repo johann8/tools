@@ -13,7 +13,7 @@
 #                                                                            #
 # Created     : 02.08.2022                                                   #
 # Last update : 26.08.2024                                                   #
-# Version     : 0.2.3                                                        #
+# Version     : 0.2.4                                                        #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermann*****technik.de>              #
 # DokuWiki    : https://docu.***.wassermanngruppe.de                         #
@@ -44,14 +44,14 @@ VOLGROUP=rl_vmd63899                                      # lvdisplay: name of t
 LV_NAME=opt,var                                           # lvdisplay: name of the logical volume to backup. Getrennt mit Komma oder Leerzeichen
 SNAP_SUFFIX=snap                                          #
 SNAP_LV_NAME=opt_${SNAP_SUFFIX},var_${SNAP_SUFFIX}        # name of logical volume snapshot. Getrennt mit Komma oder Leerzeichen
-SNAPSIZE=5G                                               # space to allocate for the snapshot in the volume group
+SNAPSIZE=1G                                               # space to allocate for the snapshot in the volume group
 MOUNTDIR="/mnt/lvm_snap"                                  # Path to mount point of lv snapshot
 MOUNT_OPTIONS="-o nouuid"                                 # Mount option for xfs FS
 
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.2.3"
+SCRIPT_VERSION="0.2.4"
 SCRIPT_START_TIME=$SECONDS                                # Script start time
 
 # CUSTOM - vars
@@ -79,10 +79,10 @@ VAR_SENDER='root@'${VAR_HOSTNAME}
 VAR_EMAILDATE=$(date '+%a, %d %b %Y %H:%M:%S (%Z)')
 
 # CUSTOM - Mail-Recipient.
-MAIL_RECIPIENT='jhahn@itconsulting-hahn.de'
+MAIL_RECIPIENT='admin@myfirma.de'
 
 # CUSTOM - Days number of stored backups
-BACKUP_DAYS=3
+BACKUP_DAYS=6
 
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
@@ -353,7 +353,7 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
       fi
 
       # check if FS ist XFS
-      FS_XFS=$(df -hT |grep -w '/opt' |awk '{print $2}')
+      FS_XFS=$(df -hT | grep -w "dev" | grep -w "$i" | awk '{print $2}')
 
       if [ "${FS_XFS}" = "xfs" ]; then
          # mount snapshot
