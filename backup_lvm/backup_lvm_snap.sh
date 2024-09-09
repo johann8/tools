@@ -12,8 +12,8 @@
 #               will be send by e-mail.                                      #
 #                                                                            #
 # Created     : 02.08.2022                                                   #
-# Last update : 26.08.2024                                                   #
-# Version     : 0.2.4                                                        #
+# Last update : 09.09.2024                                                   #
+# Version     : 0.2.5                                                        #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermann*****technik.de>              #
 # DokuWiki    : https://docu.***.wassermanngruppe.de                         #
@@ -37,22 +37,22 @@
 # >>> Please edit following lines for personal settings and custom usages. ! #
 ##############################################################################
 
-# CUSTOM LV vars - please adjust
-LVM_PARTITION_DOCKER=yes                                  # is there LVM Partition for docker container: yes | no
-LV_DOCKER_NAME=opt                                        # Docker containers are installed on the Logical Volume named "opt". If empty, the containers will not be stopped.
-VOLGROUP=rl_vmd63899                                      # lvdisplay: name of the volume group
-LV_NAME=opt,var                                           # lvdisplay: name of the logical volume to backup. Getrennt mit Komma oder Leerzeichen
-SNAP_SUFFIX=snap                                          #
-SNAP_LV_NAME=opt_${SNAP_SUFFIX},var_${SNAP_SUFFIX}        # name of logical volume snapshot. Getrennt mit Komma oder Leerzeichen
-SNAPSIZE=1G                                               # space to allocate for the snapshot in the volume group
-MOUNTDIR="/mnt/lvm_snap"                                  # Path to mount point of lv snapshot
-MOUNT_OPTIONS="-o nouuid"                                 # Mount option for xfs FS
+# CUSTOM LV vars - please adjusti
+LVM_PARTITION_DOCKER=yes                            # is there LVM Partition for docker container: yes | no
+LV_DOCKER_NAME=opt                                  # Docker containers are installed on the Logical Volume named "opt". If empty, the containers will not be stopped.
+VOLGROUP=rl_vmd63899                                # lvdisplay: name of the volume group
+LV_NAME=opt,var                                     # lvdisplay: name of the logical volume to backup. Getrennt mit Komma oder Leerzeichen
+SNAP_SUFFIX=snap                                    #
+SNAP_LV_NAME=opt_${SNAP_SUFFIX},var_${SNAP_SUFFIX}  # name of logical volume snapshot. Getrennt mit Komma oder Leerzeichen
+SNAPSIZE=1G                                         # space to allocate for the snapshot in the volume group
+MOUNTDIR="/mnt/lvm_snap"                            # Path to mount point of lv snapshot
+MOUNT_OPTIONS="-o nouuid"                           # Mount option for xfs FS
 
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.2.4"
-SCRIPT_START_TIME=$SECONDS                                # Script start time
+SCRIPT_VERSION="0.2.5"
+SCRIPT_START_TIME=$SECONDS                          # Script start time
 
 # CUSTOM - vars
 #BASENAME="${0##*/}"
@@ -312,16 +312,16 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
 
          # stop docker container
          echo -e "Info: Found $(docker ps -aq | wc -l) Docker containers." | tee -a ${FILE_LAST_LOG}
-		 echo -e "Info: Stopping all docker containers ..." | tee -a ${FILE_LAST_LOG}
+         echo -e "Info: Stopping all docker containers ..." | tee -a ${FILE_LAST_LOG}
          CONTAINERS=$(docker ps -aq)
          TOTAL_CONTAINERS=$(echo "$CONTAINERS" | wc -w)
          CONTAINER_COUNTER=0
          echo -e "....................................................." | tee -a ${FILE_LAST_LOG}
          stop_docker_container
 		 
-		 # Set var STOP_RES=0, if docker container stopped
-		 STOP_RES=0
-	  fi
+         # Set var STOP_RES=0, if docker container stopped
+         STOP_RES=0
+      fi
 
       # create the lvm snapshot
       if ! ${LVCREATE_COMMAND} -L${SNAPSIZE} -s -n ${i}_${SNAP_SUFFIX} /dev/${VOLGROUP}/${i}  >/dev/null 2>&1; then
@@ -342,14 +342,14 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
       fi
 
       # check that the mount point does not already exist, mount snapshot MOUNTDIR="/mnt/lvm_snap"
-      if ! [ -d ${MOUNTDIR}/${i}_${SNAP_SUFFIX} ]; then
+      if ! [ -d ${MOUNTDIR}/${i} ]; then
          # create mount point
          # echo " " | tee -a ${FILE_LAST_LOG}
-         echo -e "Info: Creating mount point \"${MOUNTDIR}/${i}_${SNAP_SUFFIX}\" ... " | tee -a ${FILE_LAST_LOG}
-         mkdir -p ${MOUNTDIR}/${i}_${SNAP_SUFFIX}
+         echo -e "Info: Creating mount point \"${MOUNTDIR}/${i}\" ... " | tee -a ${FILE_LAST_LOG}
+         mkdir -p ${MOUNTDIR}/${i}
       else
          # echo " " | tee -a ${FILE_LAST_LOG}
-         echo -e "Info: Mount point exists \"${MOUNTDIR}/${i}_${SNAP_SUFFIX}\"" | tee -a ${FILE_LAST_LOG}
+         echo -e "Info: Mount point exists \"${MOUNTDIR}/${i}\"" | tee -a ${FILE_LAST_LOG}
       fi
 
       # check if FS ist XFS
@@ -358,7 +358,7 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
       if [ "${FS_XFS}" = "xfs" ]; then
          # mount snapshot
          echo -e "Info: Mounting LV snapshot \"/dev/${VOLGROUP}/${i}_${SNAP_SUFFIX}\" ... "  | tee -a ${FILE_LAST_LOG}
-         ${MOUNT_COMMAND} ${MOUNT_OPTIONS} /dev/${VOLGROUP}/${i}_${SNAP_SUFFIX} ${MOUNTDIR}/${i}_${SNAP_SUFFIX}
+         ${MOUNT_COMMAND} ${MOUNT_OPTIONS} /dev/${VOLGROUP}/${i}_${SNAP_SUFFIX} ${MOUNTDIR}/${i}
          RES=$?
 
          if [ "$RES" != '0' ]; then
@@ -370,7 +370,7 @@ if [[ "${LVM_PARTITION_DOCKER}" == "yes" ]]; then
       else
          # mount snapshot
          echo -e "Info: Mounting LVM snapshot \"/dev/${VOLGROUP}/${i}_${SNAP_SUFFIX}\" ... " | tee -a ${FILE_LAST_LOG}
-         ${MOUNT_COMMAND} /dev/${VOLGROUP}/${i}_${SNAP_SUFFIX} ${MOUNTDIR}/${i}_${SNAP_SUFFIX}
+         ${MOUNT_COMMAND} /dev/${VOLGROUP}/${i}_${SNAP_SUFFIX} ${MOUNTDIR}/${i}
          RES=$?
 
          if [ "$RES" != '0' ]; then
@@ -444,7 +444,7 @@ if [ "${SNAP_RES}" = '0' ]; then
       if [ -n ${LV_DOCKER_NAME} ] && [[ "${i}" == "var" ]]; then 
  
          # Run backup
-         if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i}_${SNAP_SUFFIX}/lib/docker/ > /dev/null 2>&1; then
+         if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i}/lib/docker/ > /dev/null 2>&1; then
          # for debug
          #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
@@ -456,7 +456,7 @@ if [ "${SNAP_RES}" = '0' ]; then
          fi
       else
          # Run backup
-         if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i}_${SNAP_SUFFIX} > /dev/null 2>&1; then
+         if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i} > /dev/null 2>&1; then
          # for debug
          #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
@@ -472,7 +472,7 @@ if [ "${SNAP_RES}" = '0' ]; then
       if [ "${T_RES}" = '0' ]; then    # prevent removal if error occurred above.
          # umount snapshot
          echo -e "Info: Unmounting LV snapshot \"/dev/${VOLGROUP}/${i}_${SNAP_SUFFIX}\" ... " 2>&1 | tee -a ${FILE_LAST_LOG}
-         ${UMOUNT_COMMAND} ${MOUNTDIR}/${i}_${SNAP_SUFFIX}
+         ${UMOUNT_COMMAND} ${MOUNTDIR}/${i}
          U_RES=$?
 
          # remove snapshot
