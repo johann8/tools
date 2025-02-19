@@ -3,7 +3,6 @@
 ```bash
 # download files and set permissions
 wget https://raw.githubusercontent.com/johann8/tools/master/backup_lvm/backup_lvm_snap.sh -O /usr/local/bin/backupLVS.sh
-https://raw.githubusercontent.com/johann8/tools/master/backup_lvm/tar_exclude_var.txt -O /usr/local/bin/tar_exclude_var.txt
 chmod 0700 /usr/local/bin/backupLVS.sh
 
 # add crontab
