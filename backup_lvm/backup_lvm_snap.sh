@@ -452,7 +452,7 @@ if [ "${SNAP_RES}" = '0' ]; then
             # Determine archive size
             ARCHVE_SIZE=$(ls -lh ${BACKUPDIR}/${BACKUPNAME} | awk '{print $5}')
 
-            echo -e "The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
+            echo -e "Info: The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
 
             # md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
             T_RES=0
@@ -470,7 +470,7 @@ if [ "${SNAP_RES}" = '0' ]; then
             # Determine archive size
             ARCHVE_SIZE=$(ls -lh ${BACKUPDIR}/${BACKUPNAME} | awk '{print $5}')
 
-            echo -e "The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
+            echo -e "Info: The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
             # md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
             T_RES=0
          else
