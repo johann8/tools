@@ -29,7 +29,7 @@
 #  | (at your option) any later version.                                  |  #
 #  +----------------------------------------------------------------------+  #
 #                                                                            #
-# Copyright (c) 2022 - 2024 by Johann Hahn                                   #
+# Copyright (c) 2022 - 2025 by Johann Hahn                                   #
 #                                                                            #
 ##############################################################################
 
@@ -40,7 +40,7 @@
 # CUSTOM LV vars - please adjusti
 LVM_PARTITION_DOCKER=yes                            # is there LVM Partition for docker container: yes | no
 LV_DOCKER_NAME=opt                                  # Docker containers are installed on the Logical Volume named "opt". If empty, the containers will not be stopped.
-VOLGROUP=rl_vmd63899                                # lvdisplay: name of the volume group
+VOLGROUP=rl                                         # lvdisplay: name of the volume group
 LV_NAME=opt,var                                     # lvdisplay: name of the logical volume to backup. Getrennt mit Komma oder Leerzeichen
 SNAP_SUFFIX=snap                                    #
 SNAP_LV_NAME=opt_${SNAP_SUFFIX},var_${SNAP_SUFFIX}  # name of logical volume snapshot. Getrennt mit Komma oder Leerzeichen
