@@ -12,8 +12,8 @@
 #               will be send by e-mail.                                      #
 #                                                                            #
 # Created     : 02.08.2022                                                   #
-# Last update : 09.09.2024                                                   #
-# Version     : 0.2.5                                                        #
+# Last update : 19.02.2025                                                   #
+# Version     : 0.2.6                                                        #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermann*****technik.de>              #
 # DokuWiki    : https://docu.***.wassermanngruppe.de                         #
@@ -51,7 +51,7 @@ MOUNT_OPTIONS="-o nouuid"                           # Mount option for xfs FS
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.2.5"
+SCRIPT_VERSION="0.2.6"
 SCRIPT_START_TIME=$SECONDS                          # Script start time
 
 # CUSTOM - vars
@@ -64,7 +64,7 @@ BACKUPNAME="${LV_NAME}_${TIMESTAMP}.tgz"                                        
 TAR_EXCLUDE_VAR="--exclude-from=${SCRIPTDIR}/tar_exclude_var.txt"               # Files|folders to be excluded from tar archive
 SEARCHDIR="${BACKUPDIR%/*}"
 
-# only if Bacula is used
+# only if Bacula is used, otherwise comment 
 AR_EXCLUDE_B_CONTAINER=(bacularis bacula-db bacula-smtpd)                       # Array - exclude bacula container
 
 # CUSTOM - logs
@@ -439,7 +439,7 @@ if [ "${SNAP_RES}" = '0' ]; then
       # Set var BACKUPNAME
       BACKUPNAME="${i}_${TIMESTAMP}.tgz" 	  
 
-      echo -e "Info: Running backup ..."
+      echo -e "Info: Running backup \"${i}\" ..."
       # Create backup
       if [ -n ${LV_DOCKER_NAME} ] && [[ "${i}" == "var" ]]; then 
  
@@ -448,6 +448,12 @@ if [ "${SNAP_RES}" = '0' ]; then
          # for debug
          #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
+
+            # Determine archive size
+            ARCHVE_SIZE=$(ls -lh ${BACKUPDIR}/${BACKUPNAME} | awk '{print $5}')
+
+            echo -e "The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
+
             # md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
             T_RES=0
          else
@@ -456,10 +462,15 @@ if [ "${SNAP_RES}" = '0' ]; then
          fi
       else
          # Run backup
-         if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i} > /dev/null 2>&1; then
+         if tar -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i} > /dev/null 2>&1; then
          # for debug
          #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
+
+            # Determine archive size
+            ARCHVE_SIZE=$(ls -lh ${BACKUPDIR}/${BACKUPNAME} | awk '{print $5}')
+
+            echo -e "The archive size of \"${BACKUPNAME}\" is: ${ARCHVE_SIZE}" 2>&1 | tee -a ${FILE_LAST_LOG}
             # md5sum ${BACKUPDIR}/${BACKUPNAME} > ${BACKUPDIR}/${BACKUPNAME}.md5
             T_RES=0
          else
