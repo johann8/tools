@@ -21,6 +21,6 @@ lvdisplay
   VG Name                rl
 ----------------
 
-# Adjust vars "VOLGROUP, ORIGVOL and MAIL_RECIPIENT"
+# Adjust vars "VOLGROUP, ORIGVOL, BACKUPDIR and MAIL_RECIPIENT"
 vim /usr/local/bin/backupLVS.sh
 ```
