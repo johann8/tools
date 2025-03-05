@@ -18,7 +18,7 @@
 #  | it.                                                                  |  #
 #  +----------------------------------------------------------------------+  #
 #                                                                            #
-# Copyright (c) 2023 by Johann Hahn.                                         #
+# Copyright (c) 2023 - 2025 by Johann Hahn                                   #
 #                                                                            #
 ##############################################################################
  
@@ -44,6 +44,9 @@
 # Version     : 1.04                                                         #
 # Description : Small changes                                                #
 # -------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------- #
+# Version     : 1.07                                                         #
+# Description : Changed vars VAR_EMAILDATE and VAR_HOSTNAME                  #
 ##############################################################################
  
 ##############################################################################
@@ -52,7 +55,7 @@
  
 # CUSTOM - Script-Name.
 SCRIPT_NAME='mysqldump_docker_backup_full'
-SCRIPT_VERSION='1.06'
+SCRIPT_VERSION='1.07'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
  
 # CUSTOM - Backup-Files.
@@ -101,9 +104,9 @@ FILE_LOG='/var/log/'$SCRIPT_NAME'.log'
 FILE_LAST_LOG='/tmp/'$SCRIPT_NAME'.log'
 FILE_MAIL='/tmp/'$SCRIPT_NAME'.mail'
 FILE_MBOXLIST='/tmp/'$SCRIPT_NAME'.mboxlist'
-VAR_HOSTNAME=`uname -n`
+VAR_HOSTNAME=`hostname -f`
 VAR_SENDER='root@'$VAR_HOSTNAME
-VAR_EMAILDATE=`$DATE_COMMAND '+%a, %d %b %Y %H:%M:%S (%Z)'`
+VAR_EMAILDATE=`$DATE_COMMAND '+%a, %d.%m.%Y %H:%M:%S (%Z)'`
  
 # Functions.
 function log() {
