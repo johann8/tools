@@ -12,8 +12,8 @@
 #               will be send by e-mail.                                      #
 #                                                                            #
 # Created     : 02.08.2022                                                   #
-# Last update : 19.02.2025                                                   #
-# Version     : 0.2.6                                                        #
+# Last update : 05.03.2025                                                   #
+# Version     : 0.2.7                                                        #
 #                                                                            #
 # Author      : Johann Hahn, <j.hahn@wassermann*****technik.de>              #
 # DokuWiki    : https://docu.***.wassermanngruppe.de                         #
@@ -51,7 +51,7 @@ MOUNT_OPTIONS="-o nouuid"                           # Mount option for xfs FS
 # CUSTOM - script
 SCRIPT_NAME="backupLVS.sh"
 BASENAME=${SCRIPT_NAME}
-SCRIPT_VERSION="0.2.6"
+SCRIPT_VERSION="0.2.7"
 SCRIPT_START_TIME=$SECONDS                          # Script start time
 
 # CUSTOM - vars
@@ -74,9 +74,9 @@ FILE_MAIL='/tmp/'${SCRIPT_NAME}'.mail'
 # CUSTOM - Send mail
 MAIL_STATUS='Y'                                                                 # Send Status-Mail [Y|N]
 PROG_SENDMAIL='/sbin/sendmail'
-VAR_HOSTNAME=$(uname -n)
+VAR_HOSTNAME=$(hostname -f)
 VAR_SENDER='root@'${VAR_HOSTNAME}
-VAR_EMAILDATE=$(date '+%a, %d %b %Y %H:%M:%S (%Z)')
+VAR_EMAILDATE=$(date '+%a, %d.%m.%Y %H:%M:%S (%Z)')
 
 # CUSTOM - Mail-Recipient.
 MAIL_RECIPIENT='admin@myfirma.de'
