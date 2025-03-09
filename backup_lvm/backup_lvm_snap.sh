@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # For debug
-# set -x
+set -x
 #
 
 ##############################################################################
@@ -44,7 +44,7 @@ VOLGROUP=rl                                         # lvdisplay: name of the vol
 LV_NAME=opt,var                                     # lvdisplay: name of the logical volume to backup. Getrennt mit Komma oder Leerzeichen
 SNAP_SUFFIX=snap                                    #
 SNAP_LV_NAME=opt_${SNAP_SUFFIX},var_${SNAP_SUFFIX}  # name of logical volume snapshot. Getrennt mit Komma oder Leerzeichen
-SNAPSIZE=1G                                         # space to allocate for the snapshot in the volume group
+SNAPSIZE=2G                                         # space to allocate for the snapshot in the volume group
 MOUNTDIR="/mnt/lvm_snap"                            # Path to mount point of lv snapshot
 MOUNT_OPTIONS="-o nouuid"                           # Mount option for xfs FS
 
@@ -60,8 +60,8 @@ SCRIPTDIR="${0%/*}"
 BACKUPDIR="/var/backup/docker/$(hostname -s)/lvm-snapshot/$(date "+%Y-%m-%d_%Hh-%Mm")"  # where to put the backup
 TIMESTAMP="$(date +%Y%m%d-%Hh%Mm)"
 _DATUM="$(date '+%Y-%m-%d %Hh:%Mm:%Ss')"
-BACKUPNAME="${LV_NAME}_${TIMESTAMP}.tgz"                                        # name of the archive
-TAR_EXCLUDE_VAR="--exclude-from=${SCRIPTDIR}/tar_exclude_var.txt"               # Files|folders to be excluded from tar archive
+#BACKUPNAME="${LV_NAME}_${TIMESTAMP}.tgz"                                        # name of the archive
+TAR_EXCLUDE_VAR="--exclude-from=${SCRIPTDIR}/tar_exclude_var.txt"                # Files|folders to be excluded from tar archive
 SEARCHDIR="${BACKUPDIR%/*}"
 
 # only if Bacula is used, otherwise comment 
@@ -258,6 +258,7 @@ rm -f ${FILE_MAIL}
 #
 ### ============= Main script ============
 #
+
 echo -e "\n" 2>&1 > ${FILE_LAST_LOG}
 echo -e "Started on \"$(hostname -f)\" at \"${_DATUM}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 echo -e "Script version is: \"${SCRIPT_VERSION}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
@@ -395,7 +396,7 @@ if [ "${SNAP_RES}" = '0' ]; then
    # Start docker container, if STOP_RES=0
    if [[ "${STOP_RES}" = '0' ]]; then
 
-      # stop docker container
+      # start docker container
       echo -e "Info: Found $(docker ps -aq | wc -l) Docker containers." | tee -a ${FILE_LAST_LOG}
       echo -e "Info: Starting all stopped docker containers ... " | tee -a ${FILE_LAST_LOG} 
       CONTAINERS=$(docker ps -aq)
@@ -445,8 +446,8 @@ if [ "${SNAP_RES}" = '0' ]; then
  
          # Run backup
          if tar ${TAR_EXCLUDE_VAR} -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i}/lib/docker/ > /dev/null 2>&1; then
-         # for debug
-         #if ls -la > /dev/null 2>&1; then
+            # for debug
+            #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 
             # Determine archive size
@@ -463,8 +464,8 @@ if [ "${SNAP_RES}" = '0' ]; then
       else
          # Run backup
          if tar -cvzf ${BACKUPDIR}/${BACKUPNAME} ${MOUNTDIR}/${i} > /dev/null 2>&1; then
-         # for debug
-         #if ls -la > /dev/null 2>&1; then
+            # for debug
+            #if ls -la > /dev/null 2>&1; then
             echo -e "Info: Created TAR archive: \"${BACKUPDIR}/${BACKUPNAME}\"" 2>&1 | tee -a ${FILE_LAST_LOG}
 
             # Determine archive size
