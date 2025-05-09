@@ -1,6 +1,6 @@
-<h1 align="center">Dump postgreSQL script</h1>
+<h1 align="center">Bash script - Dump and restore postgreSQL</h1>
 
-#### Install `postgresql_dump_docker.sh` script
+#### Install script `postgresql_dump_docker.sh`
 
 ```bash
 cd /usr/local/bin
@@ -23,6 +23,7 @@ crontab -e
 25  4  *  *  *  /usr/local/bin/postgresql_dump_docker.sh > /dev/null 2>&1
 ----
 ```
+
 #### Recovery database
 
 - Path to backup files: `/mnt/nfsStorage/mc/databases/postgreSQL/`
