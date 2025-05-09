@@ -1,0 +1,6 @@
+#
+### Run `crontab -e` and put lines below
+#
+
+# Dump PostgreSQL DB
+20  4  *  *  *  /usr/local/bin/postgresql_dump_docker.sh > /dev/null 2>&1
