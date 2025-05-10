@@ -26,7 +26,7 @@ crontab -e
 
 #### Recovery database
 
-- Path to backup files: `/mnt/nfsStorage/mc/databases/postgreSQL/`
+- Path to backup files: `/mnt/nfsStorage/mc/databases/postgreSQL`
 
 - Name of the database: authentikdb
 
@@ -48,8 +48,15 @@ insgesamt 4556
 # create tmp dir
 mkdir /tmp/recovery
 
+# Set some vars
+POSTGRES_DB=authentikdb
+POSTGRES_USER=postgres
+POSTGRES_CONTAINER_NAME=authentik-postgres
+POSTGRES_CONTAINER_SERVICE_NAME=postgresql
+
+
 # unzip backup into recovery directory
-tar -xvzf /mnt/nfsStorage/mc/databases/postgreSQL/pg_dump_authentikdb_2025-05-09_09h-04m.tar.gz -C /tmp/recovery --atime-preserve --preserve-permissions
+tar -xvzf /mnt/nfsStorage/mc/databases/postgreSQL/pg_dump_${POSTGRES_DB}_2025-05-09_09h-04m.tar.gz -C /tmp/recovery --atime-preserve --preserve-permissions
 
 # Stop monit service
 systemctl stop monit
@@ -61,23 +68,23 @@ cd /opt/authentik/
 docker compose down
 
 # Run only postgres container
-docker compose up -d postgresql
+docker compose up -d ${POSTGRES_CONTAINER_SERVICE_NAME}
 
 # Create dump of database to be deleted "authentikdb"
 #docker compose exec postgresql pg_dump -U postgres -d authentikdb -cC > pg_dump_authentikdb.sql
-docker exec -it authentik-postgres pg_dump -U postgres -d authentikdb -cC >  pg_dump_authentikdb.sql 
+docker exec -it ${POSTGRES_CONTAINER_NAME} pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} -cC >  pg_dump_${POSTGRES_DB}_`date "+%Y-%m-%d_%Hh-%Mm"`.sql 
 
 # Delete database "authentikdb"
-docker exec -it authentik-postgres psql -U postgres -d postgres -c "DROP DATABASE authentikdb;"
+docker exec -it ${POSTGRES_CONTAINER_NAME} psql -U ${POSTGRES_USER} -d postgres -c "DROP DATABASE authentikdb;"
 
 # Recreate docker container
-docker compose up --force-recreate -d postgresql
+docker compose up --force-recreate -d ${POSTGRES_CONTAINER_SERVICE_NAME}
 
 # recovery database "authentikdb"
-cat /tmp/recovery/pg_dump_authentikdb_2025-05-09_09h-04m.sql | docker compose exec -T postgresql psql -U postgres
+cat /tmp/recovery/pg_dump_${POSTGRES_DB}_2025-05-09_09h-04m.sql | docker compose exec -T ${POSTGRES_CONTAINER_SERVICE_NAME} psql -U postgres
 
 # restart docker container
-docker compose up --force-recreate -d postgresql
+docker compose up --force-recreate -d ${POSTGRES_CONTAINER_SERVICE_NAME}
 docker compose logs -f
 
 # If no errors are seen, then restart docker stack
