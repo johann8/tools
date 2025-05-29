@@ -18,12 +18,11 @@
 
 # CUSTOM - Script-Name.
 SCRIPT_NAME='postgresql_dump_docker'
-SCRIPT_VERSION='1.1'
+SCRIPT_VERSION='1.2'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
 
 # CUSTOM - Backup-Files.
 DB_USER=postgres
-DB_NAMES='authentikdb'
 TIMESTAMP=$(date '+%Y-%m-%d_%Hh-%Mm')
 BACKUP_DIR="/mnt/nfsStorage/$(hostname -s)/databases/postgreSQL"
 FILE_BACKUP=pg_dump_${POSTGRES_DB}_${TIMESTAMP}.sql
@@ -32,23 +31,22 @@ FILE_DELETE='*.tar.gz'
 # Example: 11 x 30 = 330
 # Actual: 5 x 10 = 50
 DB_NUMBER=1
-DAYS_NUMBER=10
+DAYS_NUMBER=7
 BACKUPFILES_DELETE=$((${DB_NUMBER} * ${DAYS_NUMBER}))
 BACKUPFILES_DELETE_DB=${DAYS_NUMBER}
-
-# CUSTOM - Mail-Recipient.
-MAIL_RECIPIENT='user@myfirma.de'
 
 # CUSTOM - Status-Mail [Y|N].
 MAIL_STATUS='Y'
 
-### CUSTOM - docker container name
+#
+### === CHANGE ME ===
+#
 
-#
-### === CHANGEME ===
-#
+# PostgreSQL Container
 CONTAINER=$(docker container ls | grep 'authentik-postgres' | cut -d" " -f1)
-
+DB_NAMES='authentikdb'
+# Mail-Recipient.
+MAIL_RECIPIENT='user@myfirma.de'
 
 ##############################################################################
 # >>> Normaly there is no need to change anything below this comment line. ! #
