@@ -12,16 +12,22 @@ fi
 mv postgresql_dump_docker.sh postgresql_dump_docker.sh_old
 wget https://raw.githubusercontent.com/johann8/tools/master/postgresql/postgresql_dump_docker.sh
 chmod 0700 postgresql_dump_docker.sh
+
+# customize script
+vim /usr/local/bin/postgresql_dump_docker.sh
 ```
 
 #### Install `crontab`
 
-```bash
-crontab -e
-----
+```bash title="crontab -e"
 # Dump PostgreSQL DB
 25  4  *  *  *  /usr/local/bin/postgresql_dump_docker.sh > /dev/null 2>&1
-----
+```
+
+#### Show postreSQL database with "\l"
+
+```bash title="cd /opt/authentik-postgres"
+docker compose exec postgres psql -U postgres
 ```
 
 #### Recovery database
@@ -62,7 +68,7 @@ tar -xvzf /mnt/nfsStorage/mc/databases/postgreSQL/pg_dump_${POSTGRES_DB}_2025-05
 systemctl stop monit
 
 # Go to docker container directory
-cd /opt/authentik/
+cd /opt/authentik-postgres/
 
 # Stop docker stack
 docker compose down
