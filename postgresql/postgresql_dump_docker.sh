@@ -272,7 +272,7 @@ for DB in ${DB_NAMES}; do
 
    log ""
    log "Packaging to archive ..."
-   log "Archive file: pg_dump_${DB}_${TIMESTAMP}.tar.gz
+   log "Archive file: pg_dump_${DB}_${TIMESTAMP}.tar.gz"
    ${TAR_COMMAND} -cvzf pg_dump_${DB}_${TIMESTAMP}.tar.gz pg_dump_${DB}_${TIMESTAMP}.sql --atime-preserve --preserve-permissions
 
    log ""
