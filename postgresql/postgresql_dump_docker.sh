@@ -288,7 +288,7 @@ for DB in ${DB_NAMES}; do
       if [ "$?" != "0" ]; then
          log "Delete old archive files ${BACKUP_DIR} .....[FAILED]"
       else
-         # # Count the number of files
+         # Count the number of files
          COUNT_FILES_PER_DB=$(ls -t ${FILE_DELETE} |sort | uniq -u | awk -F_ '{print $3}' | grep -w ${DB} | wc -l)
          
          log "The number of files to retain per DB \"${BACKUPFILES_DELETE_DB}\": ...................[  OK  ]"
