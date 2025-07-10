@@ -18,7 +18,7 @@
 
 # CUSTOM - Script-Name.
 SCRIPT_NAME='postgresql_dump_docker'
-SCRIPT_VERSION='1.2'
+SCRIPT_VERSION='1.3'
 _HOST=$(echo $(hostname) | cut -d"." -f1)
 
 # CUSTOM - Backup-Files.
@@ -288,7 +288,9 @@ for DB in ${DB_NAMES}; do
       if [ "$?" != "0" ]; then
          log "Delete old archive files ${BACKUP_DIR} .....[FAILED]"
       else
-         COUNT_FILES_PER_DB=$(ls -t ${FILE_DELETE} |sort | uniq -u | awk -F- '{print $1}' | grep -w ${DB} | wc -l)
+         # # Count the number of files
+         COUNT_FILES_PER_DB=$(ls -t ${FILE_DELETE} |sort | uniq -u | awk -F_ '{print $3}' | grep -w ${DB} | wc -l)
+         
          log "The number of files to retain per DB \"${BACKUPFILES_DELETE_DB}\": ...................[  OK  ]"
          log "Number of remaining archived files per DB: \"${COUNT_FILES_PER_DB}\" ........[  OK  ]"
       fi
