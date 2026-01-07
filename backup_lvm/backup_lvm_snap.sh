@@ -134,7 +134,7 @@ start_monit_service() {
 
 # Docker state message
 print_container_state() {
-   if [ "${DOCSTATE}" == "false" ]; then
+   if [ "${CONTAINER_STATE}" == "false" ]; then
       echo -e "${1}" | tee -a ${FILE_LAST_LOG}
    else
       echo -e "${2}" | tee -a ${FILE_LAST_LOG}
@@ -155,8 +155,8 @@ stop_docker_container() {
          echo -e "Info: Stopping container ($CONTAINER_COUNTER/$TOTAL_CONTAINERS): ${CONTAINER_NAME} ($container) ..." | tee -a ${FILE_LAST_LOG}
          docker stop $container > /dev/null 2>&1
 
-         DOCSTATE=$(docker inspect -f {{.State.Running}} $container)
-         echo -e "Info: Container running state: ${DOCSTATE}" | tee -a ${FILE_LAST_LOG}
+         CONTAINER_STATE=$(docker inspect -f {{.State.Running}} $container)
+         echo -e "Info: Container running state: ${CONTAINER_STATE}" | tee -a ${FILE_LAST_LOG}
          print_container_state "Info: Container stopped." "Info: Container ${CONTAINER_NAME} ($container) still not running, should be started!!!"
       fi
       echo -e "....................................................." | tee -a ${FILE_LAST_LOG}
@@ -181,8 +181,8 @@ start_docker_container() {
             echo -e "Info: Starting container ($CONTAINER_COUNTER/$TOTAL_CONTAINERS): ${CONTAINER_NAME} ($container) ..." | tee -a ${FILE_LAST_LOG}
             docker start $container > /dev/null 2>&1
 
-            DOCSTATE=$(docker inspect -f {{.State.Running}} $container)
-            echo -e "Info: Container running state: ${DOCSTATE}" | tee -a ${FILE_LAST_LOG}
+            CONTAINER_STATE=$(docker inspect -f {{.State.Running}} $container)
+            echo -e "Info: Container running state: ${CONTAINER_STATE}" | tee -a ${FILE_LAST_LOG}
             print_container_state "Info: Container ${CONTAINER_NAME} ($container) still not running, should be started!!!" "Info: Container started."
          fi
             echo -e "....................................................." | tee -a ${FILE_LAST_LOG}
