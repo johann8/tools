@@ -24,6 +24,7 @@ lvdisplay
 # Adjust vars "VOLGROUP, ORIGVOL, BACKUPDIR and MAIL_RECIPIENT"
 vim /usr/local/bin/backupLVS.sh
 ```
+<<<<<<< HEAD
 
 #### Test
 
@@ -47,3 +48,5 @@ vim /usr/local/bin/backupLVS.sh
 Enjoy
 
 </div>
+=======
+>>>>>>> parent of d8e0e5b (small test)
