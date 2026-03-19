@@ -24,29 +24,3 @@ lvdisplay
 # Adjust vars "VOLGROUP, ORIGVOL, BACKUPDIR and MAIL_RECIPIENT"
 vim /usr/local/bin/backupLVS.sh
 ```
-<<<<<<< HEAD
-
-#### Test
-
-> [!TIP]
-> - Some ISPs/DNS providers block access to our domains. You can bypass this by enabling [DNS-over-HTTPS (DoH)](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/encrypted-dns-browsers/) in your browser. 
-> - **Having trouble**? Visit our [troubleshooting page](https://massgrave.dev/troubleshoot) or raise an issue on [GitHub](https://github.com/massgravel/Microsoft-Activation-Scripts/issues).
-
----
-
-
-> [!NOTE]
->
-> - The `irm` command in PowerShell downloads a script from a specified URL, and the `iex` command executes it.
-> - Always double-check the URL before executing the command and verify the source is trustworthy when manually downloading files.
-> - Be cautious of third parties spreading malware disguised as MAS by altering the URL in the PowerShell command.
-
----
-
-<div align="center">
-
-Enjoy
-
-</div>
-=======
->>>>>>> parent of d8e0e5b (small test)
