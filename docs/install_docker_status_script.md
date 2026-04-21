@@ -2,7 +2,6 @@
 
 > [!NOTE]
 > The script `docker_status.sh` run with the "exited" option displays the stopped Docker containers and attempts to restart them.
-
 > The script `docker_status.sh` run with the "healthy" option displays the status of Docker containers.
 
 - Download script
