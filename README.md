@@ -8,6 +8,7 @@
 *   [Install backupDMS.sh script](#install-backupdmssh-script)
 *   [Install restic-backup.sh script](#install-restic-backupsh-script)
 *   [Install backup_lvm_snap.sh script](docs/install_backup_lvm_snapsh_script.md)
+*   [Install docker_status.sh script](docs/install_docker_status_script.md)
 
 
 ### Install `manageDC.sh` script 
