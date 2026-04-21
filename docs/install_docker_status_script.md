@@ -16,7 +16,7 @@ wget https://raw.githubusercontent.com/johann8/tools/refs/heads/master/docker_st
 chmod 0700 /usr/local/bin/docker_status.sh
 ```
 
-- Show help
+- Show script help
 
 ```bash
 docker_status.sh -h | help
